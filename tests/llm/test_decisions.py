@@ -264,6 +264,11 @@ class VendorContractTests(unittest.TestCase):
 
         client = TypeSafeClient(
             model="noul-1",
+            # The transport never reaches a service, so the key is only what
+            # the SDK requires to build a client. Taking it from the
+            # environment would make this pass on a machine that happens to
+            # hold one, and fail everywhere else.
+            api_key="not-a-real-key",
             retry=policy,
             transport=httpx2.MockTransport(refuse),
         )
