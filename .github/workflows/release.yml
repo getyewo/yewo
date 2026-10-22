@@ -1,0 +1,49 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --group dev --extra jev
+      # The tag is what a reader trusts. A tag that says one version while the
+      # package says another publishes the wrong thing, or nothing at all.
+      - name: The tag matches the version
+        run: |
+          tagged="${GITHUB_REF_NAME#v}"
+          declared=$(uv run python -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          test "$tagged" = "$declared" || {
+            echo "tag $tagged does not match pyproject $declared"
+            exit 1
+          }
+      - run: uv run ruff check
+      - run: uv run python tools/quality_gate.py
+      - run: uv run python tools/ste_gate.py
+      - run: uv run python tools/emit_schema.py --check
+      - run: uv run coverage run -m pytest
+      - run: uv run coverage report
+      - run: uv run python -m tools.eval_gate
+      - run: uv run python -m tools.mutation_sweep
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    # PyPI accepts the upload because this job proves which repository and
+    # which workflow asked. No token is stored anywhere.
+    permissions:
+      id-token: write
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build
+      # `always` rather than `automatic`, so a misconfigured publisher fails
+      # here instead of falling back to looking for a token.
+      - run: uv publish --trusted-publishing always
