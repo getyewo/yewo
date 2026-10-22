@@ -21,10 +21,8 @@ test_models/
 # macOS
 .DS_Store
 
-# Agent instructions and skills, kept local
-.agents/
-AGENTS.md
-CLAUDE.md
+# Claude Code's own settings, which are this machine's rather than the
+# project's.
 .claude/
 
 # Eval sweeps: one run of the screen corpus, kept local like any other run
