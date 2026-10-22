@@ -39,7 +39,7 @@ jobs:
     # which workflow asked. No token is stored anywhere.
     permissions:
       id-token: write
-    environment: pypi
+    environment: release
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
