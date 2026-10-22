@@ -1,5 +1,5 @@
 # Recorded exceptions to the controlled-language rules, per file. The rules
-# come from the ASD-STE100 skill's linter, so this file records only what Ronin
+# come from the ASD-STE100 skill's linter, so this file records only what Yewo
 # tolerates and never what the rules are.
 #
 # Every entry below is prose that predates the gate. Add an entry only to
@@ -12,45 +12,45 @@
 # model, so it is the prose that matters most, and these counts are the work
 # still owed on it.
 [allowed_hard_violations]
-"src/ronin/agent/actuation/actions.py" = 5
-"src/ronin/agent/artifacts/redaction.py" = 1
-"src/ronin/agent/artifacts/steps.py" = 2
-"src/ronin/agent/device/adb_control.py" = 3
-"src/ronin/agent/device/control.py" = 2
-"src/ronin/agent/device/files.py" = 1
-"src/ronin/agent/device/focus.py" = 1
-"src/ronin/agent/device/launch.py" = 2
-"src/ronin/agent/device/manifest.py" = 4
-"src/ronin/agent/device/platform.py" = 1
-"src/ronin/agent/device/readiness.py" = 1
-"src/ronin/agent/device/recording.py" = 9
-"src/ronin/agent/device/session.py" = 2
-"src/ronin/agent/device/state.py" = 3
-"src/ronin/agent/grounding/marks.py" = 3
-"src/ronin/agent/memory/replay.py" = 5
-"src/ronin/agent/memory/stall.py" = 2
-"src/ronin/agent/perception/elements.py" = 1
-"src/ronin/agent/plan/planner.py" = 6
-"src/ronin/agent/run/context.py" = 2
-"src/ronin/cli/console.py" = 2
-"src/ronin/cli/run.py" = 2
-"src/ronin/config.py" = 2
-"src/ronin/defaults.py" = 2
-"src/ronin/doctor/checks.py" = 3
-"src/ronin/schema.py" = 1
-"src/ronin/setup/environment.py" = 1
-"src/ronin/setup/steps.py" = 1
-"src/ronin/testing/journey_env.py" = 1
-"src/ronin/testing/judge/qa_auditor.py" = 4
-"src/ronin/testing/judge/rules.py" = 3
-"src/ronin/testing/judge/transitions.py" = 2
-"src/ronin/testing/judge/verdicts.py" = 2
-"src/ronin/testing/evidence.py" = 1
-"src/ronin/testing/qa_agent.py" = 1
-"src/ronin/testing/qa_planner.py" = 1
-"src/ronin/testing/report/usage_tracker.py" = 1
-"src/ronin/testing/runner.py" = 1
-"src/ronin/utils/jev_deps.py" = 1
-"src/ronin/utils/redactor.py" = 3
-"src/ronin/utils/secrets.py" = 3
-"src/ronin/utils/vision_deps.py" = 1
+"src/yewo/agent/actuation/actions.py" = 5
+"src/yewo/agent/artifacts/redaction.py" = 1
+"src/yewo/agent/artifacts/steps.py" = 2
+"src/yewo/agent/device/adb_control.py" = 3
+"src/yewo/agent/device/control.py" = 2
+"src/yewo/agent/device/files.py" = 1
+"src/yewo/agent/device/focus.py" = 1
+"src/yewo/agent/device/launch.py" = 2
+"src/yewo/agent/device/manifest.py" = 4
+"src/yewo/agent/device/platform.py" = 1
+"src/yewo/agent/device/readiness.py" = 1
+"src/yewo/agent/device/recording.py" = 9
+"src/yewo/agent/device/session.py" = 2
+"src/yewo/agent/device/state.py" = 3
+"src/yewo/agent/grounding/marks.py" = 3
+"src/yewo/agent/memory/replay.py" = 5
+"src/yewo/agent/memory/stall.py" = 2
+"src/yewo/agent/perception/elements.py" = 1
+"src/yewo/agent/plan/planner.py" = 6
+"src/yewo/agent/run/context.py" = 2
+"src/yewo/cli/console.py" = 2
+"src/yewo/cli/run.py" = 2
+"src/yewo/config.py" = 2
+"src/yewo/defaults.py" = 2
+"src/yewo/doctor/checks.py" = 3
+"src/yewo/schema.py" = 1
+"src/yewo/setup/environment.py" = 1
+"src/yewo/setup/steps.py" = 1
+"src/yewo/testing/journey_env.py" = 1
+"src/yewo/testing/judge/qa_auditor.py" = 4
+"src/yewo/testing/judge/rules.py" = 3
+"src/yewo/testing/judge/transitions.py" = 2
+"src/yewo/testing/judge/verdicts.py" = 2
+"src/yewo/testing/evidence.py" = 1
+"src/yewo/testing/qa_agent.py" = 1
+"src/yewo/testing/qa_planner.py" = 1
+"src/yewo/testing/report/usage_tracker.py" = 1
+"src/yewo/testing/runner.py" = 1
+"src/yewo/utils/jev_deps.py" = 1
+"src/yewo/utils/redactor.py" = 3
+"src/yewo/utils/secrets.py" = 3
+"src/yewo/utils/vision_deps.py" = 1

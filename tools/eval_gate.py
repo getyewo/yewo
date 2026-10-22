@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""The eval gate: what Ronin's own judging answers on a labelled corpus.
+"""The eval gate: what Yewo's own judging answers on a labelled corpus.
 
 Run it as a module from the repository root:
 
     python -m tools.eval_gate              the deterministic corpus
     python -m tools.eval_gate --screens    and the auditor, which needs a model
 
-This is a gate on Ronin, not a command a user runs against an app. It answers
+This is a gate on Yewo, not a command a user runs against an app. It answers
 one question: did a change to a prompt, a rule or the verdict ranking make
-Ronin answer a labelled case differently? It does not answer whether Ronin is
+Yewo answer a labelled case differently? It does not answer whether Yewo is
 good. Nothing in a corpus this size could.
 
 Exit codes:
@@ -42,7 +42,7 @@ def _prompt_store(record: Optional[Path]):
     asked and little else. Without one, only the hash is taken, and nothing
     is written.
     """
-    from ronin.llm.prompts import PromptStore
+    from yewo.llm.prompts import PromptStore
 
     if record is None:
         return PromptStore(Path("prompts"), keep_bodies=False)
@@ -60,8 +60,8 @@ def _auditor_factory(model: str, record: Optional[Path]):
     what a later sweep is compared against, and the body would be a copy of
     a screen already in the corpus.
     """
-    from ronin.llm.llm_client import LLMClient
-    from ronin.testing.judge.qa_auditor import QAAuditor
+    from yewo.llm.llm_client import LLMClient
+    from yewo.testing.judge.qa_auditor import QAAuditor
 
     calls: list = []
     client = LLMClient(
@@ -91,7 +91,7 @@ def _at_least_one(given: str) -> int:
 
 
 def _model(named: str | None) -> str:
-    from ronin.config import load_config
+    from yewo.config import load_config
 
     return named or load_config().resolve("model")
 
@@ -199,7 +199,7 @@ class _NoCredentials(Exception):
 
 
 class _ProviderRefused(Exception):
-    """The provider could not answer, which is not a regression in Ronin.
+    """The provider could not answer, which is not a regression in Yewo.
 
     Kept apart from exit 1 on purpose. A build that reads an outage as a
     worse auditor would have somebody looking for a prompt they did not
@@ -209,7 +209,7 @@ class _ProviderRefused(Exception):
 
 
 def _screen_answers(args, audits: list) -> list[tiers.Answer]:
-    from ronin.llm.credentials import missing_credentials
+    from yewo.llm.credentials import missing_credentials
 
     model = _model(args.model)
     missing = missing_credentials(model)
@@ -231,7 +231,7 @@ def _screen_answers(args, audits: list) -> list[tiers.Answer]:
         raise
     except Exception as exc:
         _only_a_provider_failure(exc)
-        from ronin.llm.failures import reportable
+        from yewo.llm.failures import reportable
 
         raise _ProviderRefused(
             f"The screen corpus could not be asked of '{model}': {reportable(exc)}\n"
@@ -243,10 +243,10 @@ def _only_a_provider_failure(exc: Exception) -> None:
     """Lets anything that is not the provider's doing through as itself.
 
     Read as an outage, a defect in this harness exits 4 and reads as weather.
-    The cause boundary is the one Ronin already classifies provider failures
+    The cause boundary is the one Yewo already classifies provider failures
     with, so the gate does not invent a second opinion about them.
     """
-    from ronin.errors import Cause, cause_of
+    from yewo.errors import Cause, cause_of
 
     if cause_of(exc) is not Cause.PROVIDER:
         raise exc

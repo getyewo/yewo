@@ -15,8 +15,8 @@ class SystemPromptTests(unittest.TestCase):
     """
 
     def _control(self, package):
-        from ronin.agent.device.control import DeviceControl
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.control import DeviceControl
+        from yewo.agent.device.platform import Platform
 
         control = DeviceControl.__new__(DeviceControl)
         control.platform = Platform.ANDROID
@@ -45,8 +45,8 @@ class SystemPromptTests(unittest.TestCase):
 
     def test_a_driver_that_cannot_answer_reports_no_prompt(self):
         """An unreachable session must not be read as a prompt to leave alone."""
-        from ronin.agent.device.control import DeviceControl
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.control import DeviceControl
+        from yewo.agent.device.platform import Platform
 
         class DeadDriver:
             @property
@@ -67,8 +67,8 @@ class SystemPromptTests(unittest.TestCase):
         Being silent costs little there: iOS recovery brings the app forward
         rather than pressing back, so no permission is answered by accident.
         """
-        from ronin.agent.device.control import DeviceControl
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.control import DeviceControl
+        from yewo.agent.device.platform import Platform
 
         control = DeviceControl.__new__(DeviceControl)
         control.platform = Platform.IOS
@@ -89,7 +89,7 @@ class FocusTests(unittest.TestCase):
     """
 
     def _control(self, platform, app_id, foreground):
-        from ronin.agent.device.control import DeviceControl
+        from yewo.agent.device.control import DeviceControl
 
         control = DeviceControl.__new__(DeviceControl)
         control.platform = platform
@@ -102,12 +102,12 @@ class FocusTests(unittest.TestCase):
         return control
 
     def _in_sut(self, control) -> bool:
-        from ronin.agent.device.state import DeviceState
+        from yewo.agent.device.state import DeviceState
 
         return DeviceState(control).is_still_in_sut()
 
     def test_an_ios_app_in_the_foreground_is_in_the_app(self):
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control = self._control(Platform.IOS, "com.example.App", "com.example.App")
 
@@ -115,14 +115,14 @@ class FocusTests(unittest.TestCase):
 
     def test_an_ios_device_outside_the_app_is_reported_as_drift(self):
         """The whole point of the check, and it answered True for a year."""
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control = self._control(Platform.IOS, "com.example.App", "com.apple.Preferences")
 
         self.assertFalse(self._in_sut(control))
 
     def test_an_android_device_outside_the_app_is_reported_as_drift(self):
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control = self._control(Platform.ANDROID, "com.example.app", "com.android.settings")
 
@@ -130,15 +130,15 @@ class FocusTests(unittest.TestCase):
 
     def test_a_session_that_names_no_app_claims_nothing(self):
         """Nothing can be compared, and claiming drift would recover blindly."""
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control = self._control(Platform.IOS, None, "com.example.App")
 
         self.assertTrue(self._in_sut(control))
 
     def test_recovery_brings_the_app_forward_by_its_own_id(self):
-        from ronin.agent.device.platform import Platform
-        from ronin.agent.device.state import DeviceState
+        from yewo.agent.device.platform import Platform
+        from yewo.agent.device.state import DeviceState
 
         control = self._control(Platform.IOS, "com.example.App", "com.apple.Preferences")
         control.driver.activate_app = Mock()
@@ -159,7 +159,7 @@ class DriftRecoveryTests(unittest.TestCase):
         )
 
     def test_back_is_never_pressed_under_a_permission_prompt(self):
-        from ronin.agent.device.state import context_drift
+        from yewo.agent.device.state import context_drift
 
         device = self._device(in_sut=False, system_prompt=True)
 
@@ -169,7 +169,7 @@ class DriftRecoveryTests(unittest.TestCase):
         self.assertIn("permission", note)
 
     def test_the_planner_is_told_not_to_navigate_away(self):
-        from ronin.agent.device.state import context_drift
+        from yewo.agent.device.state import context_drift
 
         note = context_drift(
             self._device(in_sut=False, system_prompt=True),
@@ -180,7 +180,7 @@ class DriftRecoveryTests(unittest.TestCase):
         self.assertIn("denies the permission", note)
 
     def test_real_drift_is_still_recovered(self):
-        from ronin.agent.device.state import context_drift
+        from yewo.agent.device.state import context_drift
 
         device = self._device(in_sut=False, system_prompt=False)
 
@@ -189,7 +189,7 @@ class DriftRecoveryTests(unittest.TestCase):
         device.recover_to_sut.assert_called_once()
 
     def test_staying_in_the_app_needs_no_recovery(self):
-        from ronin.agent.device.state import context_drift
+        from yewo.agent.device.state import context_drift
 
         device = self._device(in_sut=True)
 
@@ -205,7 +205,7 @@ class KeyboardDismissTests(unittest.TestCase):
     """
 
     def _control(self, platform, keyboard_after, raises=False):
-        from ronin.agent.device.control import DeviceControl
+        from yewo.agent.device.control import DeviceControl
 
         control = DeviceControl.__new__(DeviceControl)
         control.platform = platform
@@ -224,7 +224,7 @@ class KeyboardDismissTests(unittest.TestCase):
         return control, pressed
 
     def test_android_reports_failure_when_the_keyboard_is_still_up(self):
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control, pressed = self._control(Platform.ANDROID, keyboard_after=True)
 
@@ -232,7 +232,7 @@ class KeyboardDismissTests(unittest.TestCase):
         self.assertEqual(pressed, [4])
 
     def test_android_reports_success_when_the_keyboard_went_away(self):
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control, _pressed = self._control(Platform.ANDROID, keyboard_after=False)
 
@@ -240,14 +240,14 @@ class KeyboardDismissTests(unittest.TestCase):
 
     def test_an_unanswerable_check_is_taken_as_closed(self):
         """Refusing to believe the press would retry it forever."""
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control, _pressed = self._control(Platform.ANDROID, keyboard_after=None)
 
         self.assertTrue(control.dismiss_keyboard())
 
     def test_a_press_that_raised_is_a_failure(self):
-        from ronin.agent.device.platform import Platform
+        from yewo.agent.device.platform import Platform
 
         control, _pressed = self._control(
             Platform.ANDROID, keyboard_after=False, raises=True

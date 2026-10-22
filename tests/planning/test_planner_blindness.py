@@ -14,7 +14,7 @@ import unittest
 
 from fakes import qa_prompt, walk
 
-from ronin.agent.device.launch import SetupMode
+from yewo.agent.device.launch import SetupMode
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -25,7 +25,7 @@ SENTINEL_SECURITY = "the card number is masked"
 class PlannerBoundaryTests(unittest.TestCase):
     def _case_with_rules(self):
         """A scenario whose outcome is a sentinel, so a leak is unmistakable."""
-        from ronin.testing.models import ExpectedOutcome, GeneratedTestCase
+        from yewo.testing.models import ExpectedOutcome, GeneratedTestCase
 
         return GeneratedTestCase(
             test_id="TS_001",
@@ -62,7 +62,7 @@ class PlannerBoundaryTests(unittest.TestCase):
         there was nothing to leak. This gives the scenario sentinel rules and
         reads what the planner actually sent.
         """
-        from ronin.testing.qa_planner import QAPlanner
+        from yewo.testing.qa_planner import QAPlanner
 
         test_case = self._case_with_rules()
         llm = SimpleNamespace(generate_response=Mock())
@@ -93,12 +93,12 @@ class PlannerBoundaryTests(unittest.TestCase):
         from types import SimpleNamespace
         from unittest.mock import Mock, patch
 
-        from ronin.agent.device.platform import Platform
-        from ronin.agent.memory.history import AgentHistory
-        from ronin.agent.run.agent import DeviceRunResult
-        from ronin.testing.models import SetupMode
-        from ronin.testing.qa_agent import QAAgent
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.agent.device.platform import Platform
+        from yewo.agent.memory.history import AgentHistory
+        from yewo.agent.run.agent import DeviceRunResult
+        from yewo.testing.models import SetupMode
+        from yewo.testing.qa_agent import QAAgent
+        from yewo.utils.secrets import SecretScrubber
 
         agent = QAAgent.__new__(QAAgent)
         agent._fast_llm = object()
@@ -118,7 +118,7 @@ class PlannerBoundaryTests(unittest.TestCase):
         )
         recorded = {}
 
-        with patch("ronin.testing.qa_agent.QAPlanner") as planner:
+        with patch("yewo.testing.qa_agent.QAPlanner") as planner:
             planner.side_effect = lambda **passed: recorded.update(passed) or Mock()
             agent.execute_scenario(
                 self._case_with_rules(),
@@ -152,8 +152,8 @@ class PlannerBoundaryTests(unittest.TestCase):
         not. The fields are named because which of them carry the risk is a
         judgement, and the check on each is derived.
         """
-        from ronin.agent.plan.planner import DeviceStepResponse
-        from ronin.testing.qa_planner import QAStepResponse
+        from yewo.agent.plan.planner import DeviceStepResponse
+        from yewo.testing.qa_planner import QAStepResponse
 
         base = DeviceStepResponse.model_json_schema()["properties"]
         qa = QAStepResponse.model_json_schema()["properties"]
@@ -172,7 +172,7 @@ class PlannerBoundaryTests(unittest.TestCase):
         drops. The premise is asserted first, so a field added to the model
         fails here rather than leaving the rule below it enforcing nothing.
         """
-        from ronin.testing.qa_planner import QAStepResponse
+        from yewo.testing.qa_planner import QAStepResponse
 
         prompt = qa_prompt()
 

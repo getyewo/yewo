@@ -7,13 +7,13 @@ from fakes import walk
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from types import SimpleNamespace
-from ronin.agent.device.platform import Platform
-from ronin.utils.secrets import SecretScrubber
+from yewo.agent.device.platform import Platform
+from yewo.utils.secrets import SecretScrubber
 
 
 class ArtifactSafetyTests(unittest.TestCase):
     def _scenario(self):
-        from ronin.testing.models import GeneratedTestCase
+        from yewo.testing.models import GeneratedTestCase
 
         return GeneratedTestCase(
             test_id="TS_1",
@@ -27,8 +27,8 @@ class ArtifactSafetyTests(unittest.TestCase):
         )
 
     def test_junit_distinguishes_errors_from_assertion_failures(self):
-        from ronin.testing.models import JourneyReport, ScenarioReport
-        from ronin.testing.runner import RoninTestRunner
+        from yewo.testing.models import JourneyReport, ScenarioReport
+        from yewo.testing.runner import YewoTestRunner
 
         report = JourneyReport(
             journey_id="j",
@@ -54,7 +54,7 @@ class ArtifactSafetyTests(unittest.TestCase):
             failed_count=2,
         )
         with tempfile.TemporaryDirectory() as directory:
-            runner = RoninTestRunner.__new__(RoninTestRunner)
+            runner = YewoTestRunner.__new__(YewoTestRunner)
             runner.assets_dir = Path(directory)
             runner._save_junit_report(report)
             path = next(Path(directory).glob("junit_*.xml"))
@@ -67,8 +67,8 @@ class ArtifactSafetyTests(unittest.TestCase):
 
     def test_the_report_records_what_produced_it(self):
         """A run that behaves differently must be attributable to what changed."""
-        from ronin.testing.models import JourneyReport, RunEnvironment
-        from ronin.testing.report.reports import save_markdown_report
+        from yewo.testing.models import JourneyReport, RunEnvironment
+        from yewo.testing.report.reports import save_markdown_report
 
         report = JourneyReport(
             journey_id="j",
@@ -77,7 +77,7 @@ class ArtifactSafetyTests(unittest.TestCase):
             status="PASSED",
             passed_count=1,
             environment=RunEnvironment(
-                ronin_version="0.1.0",
+                yewo_version="0.1.0",
                 model="openrouter/some/model",
                 fast_model="openrouter/some/fast",
                 platform="android",
@@ -96,8 +96,8 @@ class ArtifactSafetyTests(unittest.TestCase):
         self.assertIn("marks", payload)
 
     def test_a_report_without_an_environment_still_writes(self):
-        from ronin.testing.models import JourneyReport
-        from ronin.testing.report.reports import save_markdown_report
+        from yewo.testing.models import JourneyReport
+        from yewo.testing.report.reports import save_markdown_report
 
         report = JourneyReport(
             journey_id="j", journey_name="Journey", description="d", status="PASSED"
@@ -110,10 +110,10 @@ class ArtifactSafetyTests(unittest.TestCase):
         self.assertNotIn("**Detector**", payload)
 
     def test_the_runner_records_the_pinned_detector(self):
-        from ronin.agent.perception.detector import YOLO_REVISION
-        from ronin.testing.runner import RoninTestRunner
+        from yewo.agent.perception.detector import YOLO_REVISION
+        from yewo.testing.runner import YewoTestRunner
 
-        runner = RoninTestRunner(
+        runner = YewoTestRunner(
             device_name="emulator-5554",
             app_path="app.apk",
             platform=Platform.ANDROID,
@@ -127,8 +127,8 @@ class ArtifactSafetyTests(unittest.TestCase):
         self.assertIn(YOLO_REVISION, environment.detector)
 
     def test_report_write_failure_makes_the_run_fail(self):
-        from ronin.testing.models import JourneyReport
-        from ronin.testing.report import infrastructure
+        from yewo.testing.models import JourneyReport
+        from yewo.testing.report import infrastructure
 
         report = JourneyReport(
             journey_id="j",
@@ -157,8 +157,8 @@ class ArtifactSafetyTests(unittest.TestCase):
     def test_declared_secret_regions_are_covered_before_saving(self):
         from PIL import Image
 
-        from ronin.agent.artifacts.redaction import RedactedImages
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.agent.artifacts.redaction import RedactedImages
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"card_number": "4111222233334444"})
@@ -178,8 +178,8 @@ class ArtifactSafetyTests(unittest.TestCase):
     def test_ordinary_labels_are_never_covered(self):
         from PIL import Image
 
-        from ronin.agent.artifacts.redaction import RedactedImages
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.agent.artifacts.redaction import RedactedImages
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"password": "secret-password123"})
@@ -195,7 +195,7 @@ class ScanDumpSafetyTests(unittest.TestCase):
     """A scan dump is a file, so detected text in it outlives the run."""
 
     def _element(self, text):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
 
         return GUIElement(
             element="Text",
@@ -206,8 +206,8 @@ class ScanDumpSafetyTests(unittest.TestCase):
         )
 
     def test_declared_secrets_are_masked_in_the_dump(self):
-        from ronin.agent.artifacts.scan import element_to_dict
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.agent.artifacts.scan import element_to_dict
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"password": "secret-password123"})
@@ -217,8 +217,8 @@ class ScanDumpSafetyTests(unittest.TestCase):
         self.assertEqual(dumped["text"], "{{password}}")
 
     def test_ordinary_detected_text_survives(self):
-        from ronin.agent.artifacts.scan import element_to_dict
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.agent.artifacts.scan import element_to_dict
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"password": "secret-password123"})
@@ -230,7 +230,7 @@ class ScanDumpSafetyTests(unittest.TestCase):
 
 class SecretScrubbingTests(unittest.TestCase):
     def _scrubber(self):
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"email": "test@example.com", "password": "password123"})
@@ -244,13 +244,13 @@ class SecretScrubbingTests(unittest.TestCase):
         self.assertIn("Password field", scrubbed)
 
     def test_a_value_the_journey_did_not_declare_is_written_as_it_is(self):
-        """The `env` block is the whole of what Ronin hides.
+        """The `env` block is the whole of what Yewo hides.
 
         Masking a value nobody declared made reports unreadable: an assertion
         about an ordinary title came back as "the month view shows
         '[REDACTED]'", and a reader could not tell what the test checked.
         """
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"password": "hunter2"})
@@ -262,7 +262,7 @@ class SecretScrubbingTests(unittest.TestCase):
 
     def test_text_shaped_like_a_credential_is_still_written_as_it_is(self):
         """Patterns guessed at secrets, and a guess is not a declaration."""
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.utils.secrets import SecretScrubber
 
         text = "Password: hunter2 and card 4111 1111 1111 1111"
 
@@ -282,7 +282,7 @@ class PlannerViewArtifactTests(unittest.TestCase):
     """
 
     def _artifacts(self, saved):
-        from ronin.agent.artifacts.steps import StepArtifacts
+        from yewo.agent.artifacts.steps import StepArtifacts
 
         media = SimpleNamespace(
             save_redacted_bytes=lambda data, elements, path: saved.append((path, data))
@@ -331,7 +331,7 @@ class StepFileNameTests(unittest.TestCase):
     """One step's files sit together, and the steps sit in order."""
 
     def _names(self, steps):
-        from ronin.agent.artifacts.steps import StepArtifacts
+        from yewo.agent.artifacts.steps import StepArtifacts
 
         written = []
 

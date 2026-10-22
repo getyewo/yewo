@@ -10,17 +10,17 @@ on the way.
 import unittest
 from types import SimpleNamespace
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     ActionType,
     Coordinates,
     TapMarkAction,
     TapAction,
     TypeAction,
 )
-from ronin.agent.memory.history import ActionResult
-from ronin.agent.run.record import CallRow, StepLog, StepRecord
-from ronin.llm.usage import CallRecord
-from ronin.utils.secrets import SecretScrubber
+from yewo.agent.memory.history import ActionResult
+from yewo.agent.run.record import CallRow, StepLog, StepRecord
+from yewo.llm.usage import CallRecord
+from yewo.utils.secrets import SecretScrubber
 
 
 def planned(**extra):
@@ -214,7 +214,7 @@ class CallAttributionTests(unittest.TestCase):
         import tempfile
         from pathlib import Path
 
-        from ronin.testing.report.usage_tracker import LLMUsageTracker
+        from yewo.testing.report.usage_tracker import LLMUsageTracker
 
         with tempfile.TemporaryDirectory() as directory:
             tracker = LLMUsageTracker(output_dir=Path(directory))
@@ -234,7 +234,7 @@ class CallAttributionTests(unittest.TestCase):
         import tempfile
         from pathlib import Path
 
-        from ronin.testing.report.usage_tracker import LLMUsageTracker
+        from yewo.testing.report.usage_tracker import LLMUsageTracker
 
         with tempfile.TemporaryDirectory() as directory:
             tracker = LLMUsageTracker(output_dir=Path(directory))
@@ -255,7 +255,7 @@ class CallAttributionTests(unittest.TestCase):
         import tempfile
         from pathlib import Path
 
-        from ronin.testing.report.usage_tracker import LLMUsageTracker
+        from yewo.testing.report.usage_tracker import LLMUsageTracker
 
         with tempfile.TemporaryDirectory() as directory:
             tracker = LLMUsageTracker(output_dir=Path(directory))
@@ -305,7 +305,7 @@ class TargetLabelTests(unittest.TestCase):
     """What an element said is app content too."""
 
     def test_the_label_of_a_target_that_was_acted_on_is_scrubbed(self):
-        from ronin.agent.memory.history import ActionResult
+        from yewo.agent.memory.history import ActionResult
 
         log = scrubbing()
         log.open(1)
@@ -334,7 +334,7 @@ class TargetLabelTests(unittest.TestCase):
         self.assertFalse(step.outcome.success)
 
     def test_an_element_with_no_label_records_none_rather_than_empty(self):
-        from ronin.agent.memory.history import ActionResult
+        from yewo.agent.memory.history import ActionResult
 
         log = StepLog()
         log.open(1)
@@ -352,7 +352,7 @@ class ComponentTests(unittest.TestCase):
     """Which component made a call, when two of them share one client."""
 
     def test_the_shape_asked_for_tells_the_planner_from_the_auditor(self):
-        from ronin.llm.usage import CallRecord
+        from yewo.llm.usage import CallRecord
 
         def row(answering):
             return CallRow.of(
@@ -368,7 +368,7 @@ class ComponentTests(unittest.TestCase):
         self.assertNotEqual(row("QAStepResponse").answering, row("Assessment").answering)
 
     def test_a_call_with_no_required_shape_names_none(self):
-        from ronin.llm.usage import CallRecord
+        from yewo.llm.usage import CallRecord
 
         row = CallRow.of(
             "agent",

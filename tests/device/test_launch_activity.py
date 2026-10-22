@@ -9,9 +9,9 @@ offer a choice of icon, so the name has to come from somewhere else.
 import unittest
 from unittest.mock import patch
 
-from ronin.agent.device.adb_control import AdbControl
-from ronin.agent.device.manifest import enabled_launcher, launcher_entries
-from ronin.errors import DeviceUnavailable
+from yewo.agent.device.adb_control import AdbControl
+from yewo.agent.device.manifest import enabled_launcher, launcher_entries
+from yewo.errors import DeviceUnavailable
 
 NS = "http://schemas.android.com/apk/res/android"
 
@@ -107,7 +107,7 @@ class DeviceResolutionTests(unittest.TestCase):
 
     def _resolve(self, stdout):
         with patch(
-            "ronin.agent.device.adb_control.run_command",
+            "yewo.agent.device.adb_control.run_command",
             return_value=type("R", (), {"stdout": stdout})(),
         ):
             return AdbControl.launch_activity_on_device("emulator-5554", "org.fossify.calendar")

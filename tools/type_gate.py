@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce Ronin's type-checking ratchet with Pyright.
+"""Enforce Yewo's type-checking ratchet with Pyright.
 
 Pyright has no baseline of its own. Every file stays checked, and the recorded
 error count per file must not grow. If the gate suppressed whole files, it
@@ -89,8 +89,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "paths",
         nargs="*",
-        default=["src/ronin"],
-        help="Paths to type check (default: src/ronin)",
+        default=["src/yewo"],
+        help="Paths to type check (default: src/yewo)",
     )
     parser.add_argument(
         "--write-baseline",

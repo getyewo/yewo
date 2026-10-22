@@ -1,4 +1,4 @@
-"""Reading one ronin.yaml into the workflows it describes.
+"""Reading one yewo.yaml into the workflows it describes.
 
 A workflow owns an app, a device and an environment. A journey inside it is
 only the test, so one file covers several apps.
@@ -10,8 +10,8 @@ from tempfile import TemporaryDirectory
 
 import yaml
 
-from ronin.config import ConfigError
-from ronin.testing.suite import load_workflows, select
+from yewo.config import ConfigError
+from yewo.testing.suite import load_workflows, select
 
 SUITE = {
     "device": {"name": "Pixel_8", "platform": "android"},
@@ -35,7 +35,7 @@ SUITE = {
 
 
 def write(directory, data):
-    path = Path(directory) / "ronin.yaml"
+    path = Path(directory) / "yewo.yaml"
     path.write_text(yaml.safe_dump(data), encoding="utf-8")
     return path
 
@@ -167,7 +167,7 @@ class SelectTests(unittest.TestCase):
 
 
 class SchemaTests(unittest.TestCase):
-    """A ronin.yaml holds the settings and the tests, so a typo in it can mean
+    """A yewo.yaml holds the settings and the tests, so a typo in it can mean
     a setting that does nothing or a test that never runs."""
 
     def _load(self, data):

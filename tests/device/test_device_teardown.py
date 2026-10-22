@@ -8,10 +8,10 @@ means it has to know what it put there.
 import unittest
 from unittest.mock import patch
 
-from ronin.agent.device.adb_control import AdbControl
-from ronin.agent.device.files import DeviceFiles
-from ronin.agent.device.session import DeviceSession
-from ronin.agent.device.platform import Platform
+from yewo.agent.device.adb_control import AdbControl
+from yewo.agent.device.files import DeviceFiles
+from yewo.agent.device.session import DeviceSession
+from yewo.agent.device.platform import Platform
 
 
 class StaleRecordingSweepTests(unittest.TestCase):
@@ -36,13 +36,13 @@ class StaleRecordingSweepTests(unittest.TestCase):
         self.assertEqual(count, 1)
         self.assertEqual(removed, ["/sdcard/dd1c421d.mp4"])
 
-    def test_a_ronin_media_projection_file_is_removed(self):
-        count, removed = self._sweep([], ["ronin_32424254-28e2-4508.mp4"])
+    def test_a_yewo_media_projection_file_is_removed(self):
+        count, removed = self._sweep([], ["yewo_32424254-28e2-4508.mp4"])
 
         self.assertEqual(count, 1)
         self.assertEqual(
             removed,
-            ["/sdcard/Android/data/io.appium.settings/files/ronin_32424254-28e2-4508.mp4"],
+            ["/sdcard/Android/data/io.appium.settings/files/yewo_32424254-28e2-4508.mp4"],
         )
 
     def test_test_fixtures_on_the_device_are_left_alone(self):

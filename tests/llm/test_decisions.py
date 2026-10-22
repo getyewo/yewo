@@ -4,12 +4,12 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from ronin.utils.jev_deps import jev_available
+from yewo.utils.jev_deps import jev_available
 
 
 class DecisionCredentialTests(unittest.TestCase):
     def test_a_decision_model_names_the_key_its_sdk_reads(self):
-        from ronin.llm.credentials import missing_credentials
+        from yewo.llm.credentials import missing_credentials
 
         with mock.patch.dict("os.environ", {}, clear=True):
             self.assertEqual(
@@ -17,13 +17,13 @@ class DecisionCredentialTests(unittest.TestCase):
             )
 
     def test_that_key_satisfies_it(self):
-        from ronin.llm.credentials import missing_credentials
+        from yewo.llm.credentials import missing_credentials
 
         with mock.patch.dict("os.environ", {"TYPESAFE_API_KEY": "k"}, clear=True):
             self.assertEqual(missing_credentials("typesafe/jev-1.14.0"), [])
 
     def test_other_models_still_go_to_litellm(self):
-        from ronin.llm import credentials
+        from yewo.llm import credentials
 
         with mock.patch("litellm.validate_environment") as validate:
             validate.return_value = {"missing_keys": ["OPENROUTER_API_KEY"]}
@@ -42,7 +42,7 @@ class DecisionRecordTests(unittest.TestCase):
         )
 
     def test_a_decision_records_the_same_shape_a_completion_does(self):
-        from ronin.llm import usage
+        from yewo.llm import usage
 
         record = usage.record_decision(self._response(), "typesafe/jev-1.14.0", 412.0, 0.000135)
 
@@ -54,7 +54,7 @@ class DecisionRecordTests(unittest.TestCase):
         self.assertAlmostEqual(record.cost, 0.000135)
 
     def test_it_invents_nothing_the_route_cannot_answer(self):
-        from ronin.llm import usage
+        from yewo.llm import usage
 
         record = usage.record_decision(self._response(), "typesafe/jev-1.14.0", 1.0, None)
 
@@ -64,8 +64,8 @@ class DecisionRecordTests(unittest.TestCase):
         self.assertIsNone(record.cost)
 
     def test_the_tracker_totals_both_routes_together(self):
-        from ronin.llm import usage
-        from ronin.testing.report.usage_tracker import Totals
+        from yewo.llm import usage
+        from yewo.testing.report.usage_tracker import Totals
 
         totals = Totals()
         totals.add(usage.record_decision(self._response(), "typesafe/jev-1.14.0", 1.0, 0.0001))
@@ -102,7 +102,7 @@ class FrameTests(unittest.TestCase):
         return buffer.getvalue()
 
     def test_a_phone_frame_is_shrunk_within_the_limits(self):
-        from ronin.llm.jev_client import MAX_PIXELS, MAX_SIDE, MIN_SIDE, prepare
+        from yewo.llm.jev_client import MAX_PIXELS, MAX_SIDE, MIN_SIDE, prepare
 
         frame = prepare(self._png((1080, 2400)))
 
@@ -112,14 +112,14 @@ class FrameTests(unittest.TestCase):
         self.assertLessEqual(frame.sent[0] * frame.sent[1], MAX_PIXELS)
 
     def test_a_frame_already_within_the_limits_is_left_alone(self):
-        from ronin.llm.jev_client import prepare
+        from yewo.llm.jev_client import prepare
 
         frame = prepare(self._png((706, 1568)))
 
         self.assertEqual(frame.sent, (706, 1568))
 
     def test_a_box_maps_back_to_the_device_not_the_sent_image(self):
-        from ronin.llm.jev_client import prepare
+        from yewo.llm.jev_client import prepare
 
         frame = prepare(self._png((1080, 2400)))
 
@@ -141,7 +141,7 @@ class GrounderTests(unittest.TestCase):
         )
 
     def _grounder(self, response):
-        from ronin.agent.grounding.description import DecisionGrounder
+        from yewo.agent.grounding.description import DecisionGrounder
 
         client = mock.Mock()
         client.ask.return_value = response
@@ -194,7 +194,7 @@ class PartialResponseTests(unittest.TestCase):
     that succeeds must not fail on the way into the record."""
 
     def test_a_missing_token_count_leaves_the_cost_unknown(self):
-        from ronin.llm.jev_client import JevClient
+        from yewo.llm.jev_client import JevClient
 
         client = JevClient.__new__(JevClient)
         client._model = "typesafe/jev-1.14.0"
@@ -214,7 +214,7 @@ class PartialResponseTests(unittest.TestCase):
         self.assertEqual(records[0].prompt_tokens, 0)
 
     def test_a_box_without_a_confidence_is_still_placed(self):
-        from ronin.agent.grounding.description import DecisionGrounder
+        from yewo.agent.grounding.description import DecisionGrounder
 
         client = mock.Mock()
         client.ask.return_value = SimpleNamespace(
@@ -241,7 +241,7 @@ class VendorContractTests(unittest.TestCase):
     def test_preflight_names_the_variable_the_sdk_reads(self):
         from typesafe_sdk import constants
 
-        from ronin.llm.credentials import DECISION_KEY
+        from yewo.llm.credentials import DECISION_KEY
 
         self.assertEqual(constants.API_KEY_ENV, DECISION_KEY)
 
@@ -276,11 +276,11 @@ class VendorContractTests(unittest.TestCase):
         return len(asked)
 
     def test_the_sdk_retries_on_its_own_unless_told_not_to(self):
-        """Why Ronin sets a policy at all. Left alone this is three requests."""
+        """Why Yewo sets a policy at all. Left alone this is three requests."""
         self.assertGreater(self._requests_for_a_rate_limit(None), 1)
 
     def test_a_zero_policy_leaves_the_sdk_asking_once(self):
-        """So Ronin's own three attempts are three requests, and not nine."""
+        """So Yewo's own three attempts are three requests, and not nine."""
         from typesafe_sdk import RetryPolicy
 
         self.assertEqual(
@@ -293,7 +293,7 @@ class VendorContractTests(unittest.TestCase):
 
         import typesafe_sdk
 
-        from ronin.llm.jev_client import JevClient
+        from yewo.llm.jev_client import JevClient
 
         with mock.patch.object(typesafe_sdk, "TypeSafeClient") as built:
             self.assertIsNotNone(JevClient(model="x/noul-1").client)
@@ -339,7 +339,7 @@ class PlannerSchemaTests(unittest.TestCase):
     """
 
     def _models(self, planner_class):
-        from ronin.agent.grounding import (
+        from yewo.agent.grounding import (
             GROUNDING_COORDINATES,
             GROUNDING_DESCRIBE,
             GROUNDING_MARKS,
@@ -363,8 +363,8 @@ class PlannerSchemaTests(unittest.TestCase):
         return fields
 
     def test_each_mode_names_its_target_its_own_way(self):
-        from ronin.agent.plan.planner import DevicePlanner
-        from ronin.testing.qa_planner import QAPlanner
+        from yewo.agent.plan.planner import DevicePlanner
+        from yewo.testing.qa_planner import QAPlanner
 
         for planner_class in (DevicePlanner, QAPlanner):
             answered = self._models(planner_class)
@@ -373,8 +373,8 @@ class PlannerSchemaTests(unittest.TestCase):
             self.assertEqual(self._target_field(answered["describe"]), {"target"})
 
     def test_the_two_planners_never_share_a_schema(self):
-        from ronin.agent.plan.planner import DevicePlanner
-        from ronin.testing.qa_planner import QAPlanner
+        from yewo.agent.plan.planner import DevicePlanner
+        from yewo.testing.qa_planner import QAPlanner
 
         device = self._models(DevicePlanner)
         qa = self._models(QAPlanner)

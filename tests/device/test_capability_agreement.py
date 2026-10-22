@@ -18,16 +18,16 @@ from unittest import mock
 
 from fakes import EVERY_CAPABILITY, FakeDriver, controller, silent_reads
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     AppStateCapability,
     CapabilityKind,
     InterruptCapability,
     PermissionCapability,
 )
-from ronin.agent.device import capability_controller
-from ronin.agent.device.platform import Platform
-from ronin.errors import ActionRejected
-from ronin.testing.judge.capabilities import (
+from yewo.agent.device import capability_controller
+from yewo.agent.device.platform import Platform
+from yewo.errors import ActionRejected
+from yewo.testing.judge.capabilities import (
     Target,
     unsupported_capability,
     unsupported_for,
@@ -194,7 +194,7 @@ class PermissionSupportTests(unittest.TestCase):
         return unsupported_for(capability, target)
 
     def test_the_permissions_refused_on_ios_are_the_ones_simctl_lacks(self):
-        from ronin.agent.device.capability_maps import IOS_PRIVACY_SERVICES
+        from yewo.agent.device.capability_maps import IOS_PRIVACY_SERVICES
 
         for permission in PERMISSIONS:
             with self.subTest(permission=permission):
@@ -225,7 +225,7 @@ class PermissionSupportTests(unittest.TestCase):
         )
 
     def test_every_permission_android_names_is_allowed_there(self):
-        from ronin.agent.device.capability_maps import ANDROID_PERMISSIONS
+        from yewo.agent.device.capability_maps import ANDROID_PERMISSIONS
 
         for permission in PERMISSIONS:
             with self.subTest(permission=permission):

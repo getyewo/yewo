@@ -42,8 +42,8 @@ class VerdictFixtureTests(unittest.TestCase):
         A fixture that built loose namespaces would keep passing after a
         field was renamed, which is the failure a corpus exists to catch.
         """
-        from ronin.agent.run.outcomes import DeviceRunResult
-        from ronin.testing.models import ExpectedOutcome, QAIssue, RuleVerification
+        from yewo.agent.run.outcomes import DeviceRunResult
+        from yewo.testing.models import ExpectedOutcome, QAIssue, RuleVerification
 
         fixture = self._loaded(
             issues=[{"issue_type": "crash_screen", "severity": "critical",
@@ -59,7 +59,7 @@ class VerdictFixtureTests(unittest.TestCase):
         self.assertIsInstance(arguments["required_outcomes"][0], ExpectedOutcome)
 
     def test_a_scoped_outcome_keeps_its_scope(self):
-        from ronin.testing.models import AssertionScope
+        from yewo.testing.models import AssertionScope
 
         fixture = self._loaded(
             outcomes=[{"statement": "The screen opens quickly", "scope": "run_timing"}]

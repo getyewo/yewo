@@ -14,8 +14,8 @@ from pathlib import Path
 
 from fakes import walk
 
-from ronin.testing.models import GeneratedTestCase
-from ronin.testing.report.manifest import SCHEMA
+from yewo.testing.models import GeneratedTestCase
+from yewo.testing.report.manifest import SCHEMA
 
 
 def scenario(number: int, **extra) -> GeneratedTestCase:
@@ -63,7 +63,7 @@ class RunnerTests(unittest.TestCase):
 
         self.assertEqual(identity["platform"], "android")
         self.assertEqual(identity["device"]["model"], "Pixel 8")
-        self.assertIn("ronin_version", identity)
+        self.assertIn("yewo_version", identity)
         self.assertIn("git", identity)
         self.assertIn("ci", identity)
 
@@ -90,7 +90,7 @@ class RunnerTests(unittest.TestCase):
         self.assertIn("screenshots", classes)
 
     def test_a_failing_scenario_is_pointed_at(self):
-        from ronin.testing.models import ScenarioReport
+        from yewo.testing.models import ScenarioReport
 
         def failing(test_case):
             return ScenarioReport(
@@ -115,12 +115,12 @@ class LockedRunnerTests(unittest.TestCase):
     def _run(self, directory):
         from fakes import suite_run
 
-        journey_file = Path(directory) / "ronin.yaml"
+        journey_file = Path(directory) / "yewo.yaml"
         journey_file.write_text("device: Pixel_8\n")
         report, data = suite_run(
             [scenario(1)], directory, journey_file=journey_file
         )
-        return report, data, Path(directory) / "ronin.lock"
+        return report, data, Path(directory) / "yewo.lock"
 
     def test_a_run_writes_the_lock_beside_the_journey_file(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -137,7 +137,7 @@ class LockedRunnerTests(unittest.TestCase):
         """So two runs can be told apart by the test and not only the result."""
         with tempfile.TemporaryDirectory() as directory:
             _, data, lock_path = self._run(directory)
-            from ronin.testing import lock as lockfile
+            from yewo.testing import lock as lockfile
 
             held = lockfile.read(lock_path)
 
@@ -163,9 +163,9 @@ class EverythingReachesTheRecordTests(unittest.TestCase):
     """
 
     def _gap(self):
-        from ronin.errors import Cause
-        from ronin.testing.generator import Uncovered
-        from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+        from yewo.errors import Cause
+        from yewo.testing.generator import Uncovered
+        from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
         return Uncovered(
             CoverageCell(Category.SECURITY, ScenarioType.ROLE, Priority.P0),
@@ -209,11 +209,11 @@ class EverythingReachesTheRecordTests(unittest.TestCase):
     def test_a_report_that_would_not_write_fails_the_run_in_the_record(self):
         from unittest.mock import patch
 
-        from ronin.errors import ArtifactWriteFailed
+        from yewo.errors import ArtifactWriteFailed
         from fakes import suite_run
 
         with tempfile.TemporaryDirectory() as directory, patch(
-            "ronin.testing.runner.save_junit_report",
+            "yewo.testing.runner.save_junit_report",
             side_effect=ArtifactWriteFailed("the disk is full"),
         ):
             report, data = suite_run([scenario(1)], directory)
@@ -233,9 +233,9 @@ class GenerationCostTests(unittest.TestCase):
         import tempfile as tmp
         from pathlib import Path as P
 
-        from ronin.llm.usage import CallRecord
-        from ronin.testing.report.usage_tracker import LLMUsageTracker
-        from ronin.testing.runner import GENERATION, PLANNER
+        from yewo.llm.usage import CallRecord
+        from yewo.testing.report.usage_tracker import LLMUsageTracker
+        from yewo.testing.runner import GENERATION, PLANNER
 
         with tmp.TemporaryDirectory() as directory:
             tracker = LLMUsageTracker(output_dir=P(directory))

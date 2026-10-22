@@ -1,4 +1,4 @@
-"""What Ronin asks the model, and what it records about the answer."""
+"""What Yewo asks the model, and what it records about the answer."""
 
 import unittest
 
@@ -6,7 +6,7 @@ from fakes import qa_prompt, walk
 
 from types import SimpleNamespace
 from unittest.mock import Mock
-from ronin.agent.run.agent import (
+from yewo.agent.run.agent import (
     AgentHistory,
     DeviceAgent,
     RollingLoopDetector,
@@ -22,7 +22,7 @@ class ProviderNormalizationTests(unittest.TestCase):
     """Schemas are advisory, so equivalent shapes have to be accepted."""
 
     def test_the_planner_accepts_a_coordinate_pair(self):
-        from ronin.testing.qa_planner import QAStepResponse
+        from yewo.testing.qa_planner import QAStepResponse
 
         response = QAStepResponse.model_validate(
             {
@@ -36,7 +36,7 @@ class ProviderNormalizationTests(unittest.TestCase):
         self.assertEqual(response.action.coordinates.x, 10)
 
     def test_the_auditor_accepts_a_compact_rule_mapping(self):
-        from ronin.testing.judge.qa_auditor import Assessment
+        from yewo.testing.judge.qa_auditor import Assessment
 
         assessment = Assessment.model_validate(
             {
@@ -58,7 +58,7 @@ class PlannerAgreementTests(unittest.TestCase):
         return qa_prompt()
 
     def _device_prompt(self):
-        from ronin.agent.plan.planner import DevicePlanner
+        from yewo.agent.plan.planner import DevicePlanner
 
         planner = DevicePlanner.__new__(DevicePlanner)
         return planner._build_prompt(
@@ -71,7 +71,7 @@ class PlannerAgreementTests(unittest.TestCase):
         )
 
     def test_both_planners_carry_the_same_action_rules(self):
-        from ronin.agent.plan.planner import DevicePlanner
+        from yewo.agent.plan.planner import DevicePlanner
 
         planner = DevicePlanner.__new__(DevicePlanner)
         shared = planner._action_vocabulary() + planner._action_constraints()
@@ -89,7 +89,7 @@ class RunnerWiringTests(unittest.TestCase):
     """A name used only inside `finally` is never exercised by importing the module."""
 
     def test_every_name_the_runner_calls_is_bound(self):
-        import ronin.testing.runner as runner
+        import yewo.testing.runner as runner
 
         for name in ("unevidenced_security_rules", "aggregate_journey_status", "QAAgent"):
             self.assertTrue(hasattr(runner, name), f"{name} is not importable")
@@ -99,25 +99,25 @@ class VisionWeightsTests(unittest.TestCase):
     """The weights decide what the agent can see, so which weights must be fixed."""
 
     def test_the_detector_is_pinned_to_a_commit(self):
-        from ronin.agent.perception.detector import YOLO_REVISION
+        from yewo.agent.perception.detector import YOLO_REVISION
 
         self.assertRegex(YOLO_REVISION, r"^[0-9a-f]{40}$")
 
     def test_setup_prefetches_exactly_what_a_run_loads(self):
         """Otherwise setup warms one set of weights and the run downloads another."""
-        from ronin.agent.perception.detector import (
+        from yewo.agent.perception.detector import (
             YOLO_FILENAME,
             YOLO_REPO_ID,
             YOLO_REVISION,
         )
-        from ronin.setup.steps import PREFETCH_SCRIPT
+        from yewo.setup.steps import PREFETCH_SCRIPT
 
         for value in (YOLO_REPO_ID, YOLO_FILENAME, YOLO_REVISION):
             self.assertIn(repr(value), PREFETCH_SCRIPT)
 
     def test_the_reported_box_keeps_its_model_facing_meaning(self):
         """The model answers in this schema, so its description is prompt text."""
-        from ronin.testing.models import QAIssue
+        from yewo.testing.models import QAIssue
 
         description = QAIssue.model_json_schema()["$defs"]["BoundingBox"]["description"]
 
@@ -182,7 +182,7 @@ class ElementFormattingTests(unittest.TestCase):
     """The restaurant list that caused a one-row mis-tap in a real run."""
 
     def _planner(self):
-        from ronin.agent.plan.planner import DevicePlanner
+        from yewo.agent.plan.planner import DevicePlanner
 
         return DevicePlanner.__new__(DevicePlanner)
 
@@ -234,7 +234,7 @@ class ElementFormattingTests(unittest.TestCase):
 
 class StepBudgetTests(unittest.TestCase):
     def _agent(self, ceiling):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         agent = QAAgent.__new__(QAAgent)
         agent._device_agent = SimpleNamespace(max_steps=ceiling)
@@ -259,14 +259,14 @@ class StepBudgetTests(unittest.TestCase):
 
 class ScenarioGenerationTests(unittest.TestCase):
     def _generator(self, responses):
-        from ronin.testing.generator import ScenarioGenerator
+        from yewo.testing.generator import ScenarioGenerator
 
         client = SimpleNamespace(generate_response=Mock(side_effect=responses))
         return ScenarioGenerator(client), client
 
     def _journey(self, *cells, **extra):
-        from ronin.testing.models import UserJourney
-        from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+        from yewo.testing.models import UserJourney
+        from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
         coverage = list(cells) or [
             CoverageCell(Category.FUNCTIONAL, ScenarioType.HAPPY_PATH, Priority.P0)
@@ -281,7 +281,7 @@ class ScenarioGenerationTests(unittest.TestCase):
         )
 
     def _draft(self, name="Sign in"):
-        from ronin.testing.models import ScenarioDraft
+        from yewo.testing.models import ScenarioDraft
 
         return ScenarioDraft(
             scenario_name=name,
@@ -290,12 +290,12 @@ class ScenarioGenerationTests(unittest.TestCase):
         )
 
     def test_the_draft_schema_carries_no_identity(self):
-        """Ronin knows which cell it asked about, so a model cannot miscategorise.
+        """Yewo knows which cell it asked about, so a model cannot miscategorise.
 
         A model asked to repeat the category, the type or the id could only
         disagree with the question. The identity is stamped on afterwards.
         """
-        from ronin.testing.models import ScenarioDraft
+        from yewo.testing.models import ScenarioDraft
 
         offered = set(ScenarioDraft.model_json_schema()["properties"])
         self.assertEqual(
@@ -303,8 +303,8 @@ class ScenarioGenerationTests(unittest.TestCase):
         )
 
     def test_the_cell_decides_the_identity(self):
-        from ronin.testing.models import GeneratedTestCase
-        from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+        from yewo.testing.models import GeneratedTestCase
+        from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
         cell = CoverageCell(Category.SECURITY, ScenarioType.NEGATIVE, Priority.P0)
         stamped = GeneratedTestCase.of(cell, self._draft())
@@ -324,7 +324,7 @@ class ScenarioGenerationTests(unittest.TestCase):
         """
         from pydantic import ValidationError
 
-        from ronin.testing.models import GeneratedTestCase
+        from yewo.testing.models import GeneratedTestCase
 
         with self.assertRaises(ValidationError):
             GeneratedTestCase(
@@ -358,7 +358,7 @@ class ScenarioGenerationTests(unittest.TestCase):
         """A device is already open, so one unanswered cell is not a reason to test nothing."""
         from pydantic import ValidationError
 
-        from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+        from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
         rejected = ValidationError.from_exception_data("ScenarioDraft", [])
         generator, client = self._generator(
@@ -379,7 +379,7 @@ class ScenarioGenerationTests(unittest.TestCase):
         """A model that cannot answer is not a cell that asked for the impossible."""
         from pydantic import ValidationError
 
-        from ronin.errors import Cause
+        from yewo.errors import Cause
 
         rejected = ValidationError.from_exception_data("ScenarioDraft", [])
         generator, _ = self._generator([rejected] * 3)
@@ -391,7 +391,7 @@ class ScenarioGenerationTests(unittest.TestCase):
 
     def test_a_provider_outage_is_not_blamed_on_the_scenario(self):
         """The client retried and gave up, so this cell is lost and the rest are not."""
-        from ronin.errors import Cause, ProviderUnavailable
+        from yewo.errors import Cause, ProviderUnavailable
 
         spent = ProviderUnavailable("the provider did not answer after 3 attempts")
         generator, _ = self._generator([spent] * 3)
@@ -413,10 +413,10 @@ class ScenarioGenerationTests(unittest.TestCase):
 
         self.assertEqual(llm.generate_response.call_count, 1)
 
-    def test_ronin_writes_the_outcome_for_a_value_the_file_says_is_refused(self):
+    def test_yewo_writes_the_outcome_for_a_value_the_file_says_is_refused(self):
         """The file said so, so the words carrying it are not the model's prose."""
-        from ronin.testing.models import ScenarioDraft
-        from ronin.testing.steps import ActionStep, EnterStep
+        from yewo.testing.models import ScenarioDraft
+        from yewo.testing.steps import ActionStep, EnterStep
 
         draft = ScenarioDraft(
             scenario_name="Refuse a short password",
@@ -440,10 +440,10 @@ class ScenarioGenerationTests(unittest.TestCase):
             statements,
         )
 
-    def test_a_value_meant_to_work_gets_no_outcome_of_ronins(self):
+    def test_a_value_meant_to_work_gets_no_outcome_of_yewos(self):
         """Nothing is owed, so an outcome here would assert the app's own choice."""
-        from ronin.testing.models import ScenarioDraft
-        from ronin.testing.steps import ActionStep, EnterStep
+        from yewo.testing.models import ScenarioDraft
+        from yewo.testing.steps import ActionStep, EnterStep
 
         draft = ScenarioDraft(
             scenario_name="Sign in",
@@ -462,8 +462,8 @@ class ScenarioGenerationTests(unittest.TestCase):
 
     def test_the_rendered_walk_comes_from_the_steps(self):
         """One object, so the sentence and the value cannot name different things."""
-        from ronin.testing.models import ScenarioDraft
-        from ronin.testing.steps import ActionStep, EnterStep
+        from yewo.testing.models import ScenarioDraft
+        from yewo.testing.steps import ActionStep, EnterStep
 
         draft = ScenarioDraft(
             scenario_name="Sign in",
@@ -485,8 +485,8 @@ class ScenarioGenerationTests(unittest.TestCase):
 
     def test_a_cell_needing_an_undeclared_actor_is_not_asked_for(self):
         """A second account cannot be guessed, so the cell is reported rather than faked."""
-        from ronin.errors import Cause
-        from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+        from yewo.errors import Cause
+        from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
         generator, client = self._generator([self._draft()])
         role = CoverageCell(Category.SECURITY, ScenarioType.ROLE, Priority.P0)
@@ -502,11 +502,11 @@ class ScenarioGenerationTests(unittest.TestCase):
         client.generate_response.assert_not_called()
 
     def test_a_declared_actor_unblocks_the_role_cell(self):
-        from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+        from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
         generator, _ = self._generator([self._draft()])
         role = CoverageCell(Category.SECURITY, ScenarioType.ROLE, Priority.P0)
-        from ronin.testing.models import Actor
+        from yewo.testing.models import Actor
 
         journey = self._journey(role, actors={"editor": Actor(values={"email": "e@x.com"})})
 

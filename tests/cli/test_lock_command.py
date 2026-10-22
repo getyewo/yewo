@@ -1,4 +1,4 @@
-"""`ronin lock` — what it writes, what it says, and what it returns.
+"""`yewo lock` — what it writes, what it says, and what it returns.
 
 The command exists so generation needs no device. These cases hold it to
 that: nothing here starts an emulator, installs an app or opens a driver.
@@ -13,9 +13,9 @@ from unittest.mock import Mock, patch
 
 from fakes import walk
 
-from ronin.cli import lock as command
-from ronin.config import load_config
-from ronin.testing.models import ScenarioDraft
+from yewo.cli import lock as command
+from yewo.config import load_config
+from yewo.testing.models import ScenarioDraft
 
 YAML = """\
 device: Pixel_8
@@ -41,7 +41,7 @@ def draft(name="Sign in"):
 
 class CommandTests(unittest.TestCase):
     def _run(self, directory, responses=(), refresh=False, written=YAML):
-        path = Path(directory) / "ronin.yaml"
+        path = Path(directory) / "yewo.yaml"
         path.write_text(written)
         client = SimpleNamespace(generate_response=Mock(side_effect=list(responses)))
         said = []
@@ -51,11 +51,11 @@ class CommandTests(unittest.TestCase):
 
         with (
             patch.object(command, "require_lock"),
-            patch("ronin.llm.llm_client.LLMClient", return_value=client),
+            patch("yewo.llm.llm_client.LLMClient", return_value=client),
             patch.object(command.Console, "write", lambda _self, text: said.append(text)),
         ):
             code = command.run(args, load_config())
-        return code, said, client, Path(directory) / "ronin.lock"
+        return code, said, client, Path(directory) / "yewo.lock"
 
     def test_locking_a_file_writes_the_lock_beside_it(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -68,7 +68,7 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0]["journey"], "checkout")
         self.assertEqual(client.generate_response.call_count, 1)
-        self.assertTrue(any("ronin.lock" in line for line in said))
+        self.assertTrue(any("yewo.lock" in line for line in said))
 
     def test_locking_again_asks_for_nothing(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -113,7 +113,7 @@ class CommandTests(unittest.TestCase):
 
     def test_a_file_that_is_not_there_is_a_usage_failure(self):
         args = SimpleNamespace(
-            journey_file="/no/such/ronin.yaml", model=None, workflow=None, refresh=False
+            journey_file="/no/such/yewo.yaml", model=None, workflow=None, refresh=False
         )
         said = []
         with (
@@ -138,8 +138,8 @@ class NoDeviceTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             with (
-                patch("ronin.agent.device.session.DeviceSession.__init__", refuse),
-                patch("ronin.agent.device.readiness.ensure_device_ready", refuse),
+                patch("yewo.agent.device.session.DeviceSession.__init__", refuse),
+                patch("yewo.agent.device.readiness.ensure_device_ready", refuse),
             ):
                 code, _, _, lock_path = CommandTests()._run(directory, [draft()])
 
@@ -148,7 +148,7 @@ class NoDeviceTests(unittest.TestCase):
 
     def test_it_asks_about_the_generator_model_and_nothing_else(self):
         """`require_run` also asks for a step model and a detector. Locking does not."""
-        from ronin import preflight
+        from yewo import preflight
 
         with patch.object(preflight, "missing_for_models", return_value=[]) as asked:
             preflight.require_lock("openrouter/m")
@@ -156,8 +156,8 @@ class NoDeviceTests(unittest.TestCase):
         self.assertEqual(asked.call_args.args, ("openrouter/m",))
 
     def test_a_generator_with_no_credentials_is_refused_before_anything(self):
-        from ronin import preflight
-        from ronin.errors import UsageError
+        from yewo import preflight
+        from yewo.errors import UsageError
 
         with patch.object(
             preflight, "missing_for_models", return_value=["Missing credentials: X"]

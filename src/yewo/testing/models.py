@@ -1,0 +1,275 @@
+
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, model_validator
+
+from yewo.testing import steps
+from yewo.identity import derived_uuid, new_uuid
+from yewo.testing.steps import Step
+from yewo.testing.taxonomy import (
+    DEFAULT_COVERAGE,
+    Category,
+    CoverageCell,
+    Priority,
+    ScenarioType,
+)
+from typing import Dict, FrozenSet, List, Optional
+
+# Trail models live in agent/trail.py — re-exported here for backward compatibility.
+from yewo.agent.actuation.actions import CapabilityKind
+from yewo.agent.device.launch import SetupMode  # noqa: F401
+from yewo.agent.memory.trail import SessionTrail, TrailElement, ScreenEntry  # noqa: F401
+
+# Re-exported so a caller reads one module. These live in evidence.py, which
+# holds what a run produces, and the rules it answers.
+from yewo.testing.evidence import (  # noqa: F401
+    AssertionScope,
+    BoundingBox,
+    ExpectedOutcome,
+    JourneyReport,
+    QAIssue,
+    ReceiptRecord,
+    Rendering,
+    RuleVerification,
+    RunEnvironment,
+    STATUS_SPELLINGS,
+    ScenarioReport,
+    SensitiveFinding,
+    Status,
+    VerdictInputs,
+)
+
+
+class Actor(BaseModel):
+    """Another account a scenario signs in as.
+
+    A role scenario shows that one actor cannot reach another's data, and one
+    account cannot show that.
+
+    The names inside are the app's, not Yewo's. An app may sign in with an
+    email, a phone number, a tenant, a PIN or a token. A fixed pair of names
+    would fit one kind of app only.
+    """
+
+    values: Dict[str, str] = Field(
+        description="Whatever this app signs this account in with, by name."
+    )
+
+
+class UserJourney(BaseModel):
+    """Represents a high-level natural language user journey to test."""
+    id: str
+    name: str
+    description: str
+    security_rules: List[str] = Field(default_factory=list)
+    secrets: Dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Name-to-value pairs the journey declared sensitive. Masked by name "
+            "in written artifacts, never withheld from the planner."
+        ),
+    )
+    values: Dict[str, str] = Field(
+        default_factory=dict,
+        description=(
+            "Every name the journey's 'env' declared, resolved. These are the "
+            "values that are meant to work. A scenario asks for one by name, "
+            "rather than copying a string out of the description."
+        ),
+    )
+    refused: FrozenSet[str] = Field(
+        default_factory=frozenset,
+        description=(
+            "The names in 'values' the file said this app refuses. A fact "
+            "about the app that no reading of the value could find."
+        ),
+    )
+    actors: Dict[str, "Actor"] = Field(
+        default_factory=dict,
+        description="Other accounts a role scenario may sign in as, by name.",
+    )
+    coverage: List[CoverageCell] = Field(
+        default_factory=lambda: list(DEFAULT_COVERAGE),
+        description="The cells a run covers for this journey, in declared order.",
+    )
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class ScenarioDraft(BaseModel):
+    """What a model writes for one cell: the walk, and what must hold after it.
+
+    The identity is absent on purpose. Yewo knows which cell it asked
+    about. A model asked to name the category, the type and the id again
+    could only disagree with the question. `GeneratedTestCase` adds it.
+    """
+
+    scenario_name: str
+    steps: List[Step] = Field(
+        min_length=1,
+        description=(
+            "What the scenario does, in order. 'enter' names a declared value "
+            "and the field it goes in. 'capability' carries a device state. "
+            "'action' is one action on one control, in prose."
+        ),
+    )
+    expected_outcomes: List[ExpectedOutcome] = Field(
+        ...,
+        min_length=1,
+        description=(
+            "What must be true for this scenario to pass. Give at least one. "
+            "A separate component judges these, so a scenario that declares "
+            "none cannot be judged at all. Yewo adds an outcome of its own "
+            "for every value the file says this app refuses."
+        ),
+    )
+    setup: SetupMode = Field(
+        default=SetupMode.CLEAR_DATA,
+        description=(
+            "The state this scenario needs before its first step. "
+            "'clear_data' wipes the app so it starts as a first install would. "
+            "'relaunch' restarts it and keeps any session. "
+            "'preserve' leaves the app where the previous scenario left it."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _every_value_entered_was_declared(self, info: ValidationInfo) -> "ScenarioDraft":
+        """Holds an entered value to a name the file declared.
+
+        The names reach this through the validation context. An unknown one
+        is then refused on the same path as any other mismatch, and the model
+        is asked again. Read without the context, this passes: a caller that
+        knows no names cannot judge one.
+
+        Raises:
+            ValueError: If a step enters a name the file did not declare.
+        """
+        known = (info.context or {}).get("declared")
+        if known is None:
+            return self
+        unknown = steps.undeclared(self.steps, known)
+        if unknown:
+            raise ValueError(
+                f"No value named {unknown!r} is declared. Use one of: "
+                f"{', '.join(sorted(known)) or '(none declared)'}."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _a_refusal_cell_enters_a_refused_value(
+        self, info: ValidationInfo
+    ) -> "ScenarioDraft":
+        """Holds a cell about a refusal to entering one the file marked refused.
+
+        Raises:
+            ValueError: If this cell needs a refused value and no step enters one.
+        """
+        refused = (info.context or {}).get("refused")
+        if not refused:
+            return self
+        if not any(
+            step.value in refused for step in steps.entered_values(self.steps)
+        ):
+            raise ValueError(
+                f"This cell enters a value this app refuses. One 'enter' step "
+                f"has to name one of: {', '.join(sorted(refused))}."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _a_capability_cell_asks_for_its_capability(
+        self, info: ValidationInfo
+    ) -> "ScenarioDraft":
+        """Holds a cell about a device state to having asked for one.
+
+        Raises:
+            ValueError: If this cell needs a capability and no step carries it.
+        """
+        wanted = (info.context or {}).get("capability")
+        if wanted is None:
+            return self
+        if wanted not in steps.capability_kinds_in(self.steps):
+            raise ValueError(
+                f"This cell is about the device being {wanted.value}. One "
+                f"'capability' step has to carry a {wanted.value} capability."
+            )
+        return self
+
+
+class GeneratedTestCase(ScenarioDraft):
+    """One scenario, as a run holds it: a draft plus the cell it answers."""
+
+    scenario_uuid: str = Field(
+        default_factory=new_uuid,
+        description=(
+            "What this scenario is called wherever it is recorded. Drawn once, "
+            "then kept by the lock, so two runs of one test agree on which "
+            "test it was. `test_id` and `cell` are labels for a reader."
+        ),
+    )
+    test_id: str
+    cell: str
+    """The key this scenario keeps across runs, such as `security.negative.0`."""
+
+    category: Category
+    scenario_type: ScenarioType
+    priority: Priority
+    steps_instructions: List[str] = Field(
+        default_factory=list,
+        description=(
+            "The steps as the sentences the planner reads, rendered by Yewo. "
+            "Written from the steps so neither can drift from the other."
+        ),
+    )
+    required_capabilities: List[CapabilityKind] = Field(
+        default_factory=list,
+        description=(
+            "The device states this scenario asks for, read off its own steps. "
+            "A scenario that declared these beside its steps had two answers."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _read_what_the_steps_say(self) -> "GeneratedTestCase":
+        """Fills the rendered sentences and the capabilities from the steps.
+
+        Derived rather than passed in. A scenario built any other way then
+        cannot end up with an empty walk. Nor with a capability list that
+        disagrees with its own steps.
+        """
+        if not self.steps_instructions:
+            self.steps_instructions = steps.rendered(self.steps)
+        if not self.required_capabilities:
+            self.required_capabilities = steps.capability_kinds_in(self.steps)
+        return self
+
+    def outcome_uuid(self, index: int) -> str:
+        """What the outcome at this position is called.
+
+        Derived from the scenario and the position, which is what the outcome
+        is. The lock pins the list, so the position holds across runs of one
+        locked test.
+        """
+        return derived_uuid(self.scenario_uuid, index)
+
+    @classmethod
+    def of(
+        cls,
+        cell: CoverageCell,
+        draft: ScenarioDraft,
+        scenario_uuid: Optional[str] = None,
+    ) -> "GeneratedTestCase":
+        """Stamps a draft with the identity of the cell that asked for it.
+
+        The identifier is passed in where a lock already holds one, so a
+        locked scenario keeps the name it was reviewed under.
+        """
+        return cls(
+            **({"scenario_uuid": scenario_uuid} if scenario_uuid else {}),
+            test_id=cell.test_id,
+            cell=cell.key,
+            category=cell.category,
+            scenario_type=cell.scenario_type,
+            priority=cell.priority,
+            **draft.model_dump(),
+        )

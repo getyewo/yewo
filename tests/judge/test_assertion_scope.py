@@ -6,7 +6,7 @@ from fakes import walk
 
 
 def _outcome(statement, scope=None):
-    from ronin.testing.models import AssertionScope, ExpectedOutcome
+    from yewo.testing.models import AssertionScope, ExpectedOutcome
 
     if scope is None:
         return ExpectedOutcome(statement=statement)
@@ -16,7 +16,7 @@ def _outcome(statement, scope=None):
 class ScopeDefaultTests(unittest.TestCase):
     def test_a_bare_string_is_a_claim_about_one_screen(self):
         """Journeys and older suites carry plain strings."""
-        from ronin.testing.models import AssertionScope, GeneratedTestCase
+        from yewo.testing.models import AssertionScope, GeneratedTestCase
 
         case = GeneratedTestCase(
             test_id="t",
@@ -37,7 +37,7 @@ class AuditorScopeTests(unittest.TestCase):
     """The auditor sees one screenshot, so it is asked only what that settles."""
 
     def test_only_screen_outcomes_reach_the_auditor(self):
-        from ronin.testing.judge import rules
+        from yewo.testing.judge import rules
 
         listing = rules.every_rule(
             rules.on_screen_only(
@@ -54,7 +54,7 @@ class AuditorScopeTests(unittest.TestCase):
 
     def test_an_unasked_outcome_does_not_renumber_the_others(self):
         """A verdict's id is its position, so dropping one moves every later rule."""
-        from ronin.testing.judge import rules
+        from yewo.testing.judge import rules
 
         listing = rules.every_rule(
             rules.on_screen_only(
@@ -73,7 +73,7 @@ class UnprovableOutcomeTests(unittest.TestCase):
     """An outcome nothing measures is named, not counted as a shortfall."""
 
     def test_a_timing_outcome_is_unprovable(self):
-        from ronin.testing.judge import rules
+        from yewo.testing.judge import rules
 
         self.assertEqual(
             rules.unprovable([_outcome("No hang during login", "run_timing")]),
@@ -81,12 +81,12 @@ class UnprovableOutcomeTests(unittest.TestCase):
         )
 
     def test_a_screen_outcome_is_provable(self):
-        from ronin.testing.judge import rules
+        from yewo.testing.judge import rules
 
         self.assertEqual(rules.unprovable([_outcome("CONFIRMING is visible")]), [])
 
     def test_the_scenario_says_what_could_not_be_settled(self):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         status, reason, _cause = QAAgent.__new__(QAAgent)._determine_status(
             run_result=__import__("types").SimpleNamespace(

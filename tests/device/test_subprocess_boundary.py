@@ -9,11 +9,11 @@ never raised the error its callers catch, and every mock agreed that it did.
 import subprocess
 import unittest
 
-from ronin.agent.device.adb_control import AdbControl
-from ronin.errors import DeviceUnavailable
-from ronin.utils.subprocess_runner import DID_NOT_RUN, SubprocessRunError, run_command
+from yewo.agent.device.adb_control import AdbControl
+from yewo.errors import DeviceUnavailable
+from yewo.utils.subprocess_runner import DID_NOT_RUN, SubprocessRunError, run_command
 
-MISSING_BINARY = "ronin-no-such-binary-ckZQ"
+MISSING_BINARY = "yewo-no-such-binary-ckZQ"
 
 
 class RunCommandTests(unittest.TestCase):

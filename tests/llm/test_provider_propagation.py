@@ -18,7 +18,7 @@ from fakes import refused
 from litellm import exceptions
 from pydantic import ValidationError
 
-from ronin.errors import Cause, ProviderUnavailable
+from yewo.errors import Cause, ProviderUnavailable
 
 
 def device_run(failure):
@@ -26,8 +26,8 @@ def device_run(failure):
     import tempfile
     from pathlib import Path
 
-    from ronin.agent.device.launch import SetupMode
-    from ronin.agent.run.agent import DeviceAgent
+    from yewo.agent.device.launch import SetupMode
+    from yewo.agent.run.agent import DeviceAgent
 
     agent = object.__new__(DeviceAgent)
     agent.replay_ledger = None
@@ -38,8 +38,8 @@ def device_run(failure):
 
     with tempfile.TemporaryDirectory() as directory, \
          mock.patch.object(DeviceAgent, "_run_step", side_effect=failure), \
-         mock.patch("ronin.agent.run.agent.restart_app"), \
-         mock.patch("ronin.agent.run.agent.replay_known_path"), \
+         mock.patch("yewo.agent.run.agent.restart_app"), \
+         mock.patch("yewo.agent.run.agent.replay_known_path"), \
          mock.patch.object(DeviceAgent, "_log_recovery_cost"):
         return agent.run(
             goal="Open the app.",
@@ -69,7 +69,7 @@ class PropagationTests(unittest.TestCase):
 
     def test_every_other_failure_is_still_a_result_the_gate_can_read(self):
         """A device that misbehaved mid-scenario is a verdict, not an outage."""
-        from ronin.errors import DeviceUnavailable
+        from yewo.errors import DeviceUnavailable
 
         result = self._device_run(DeviceUnavailable("the driver went away"))
 
@@ -77,12 +77,12 @@ class PropagationTests(unittest.TestCase):
         self.assertIs(result.cause, Cause.DEVICE)
 
     def _journey(self):
-        from ronin.testing.models import UserJourney
+        from yewo.testing.models import UserJourney
 
         return UserJourney(id="j", name="J", description="A journey")
 
     def _cell(self):
-        from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+        from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
         return CoverageCell(
             category=Category.FUNCTIONAL,
@@ -91,7 +91,7 @@ class PropagationTests(unittest.TestCase):
         )
 
     def _generator(self, failure):
-        from ronin.testing.generator import ScenarioGenerator
+        from yewo.testing.generator import ScenarioGenerator
 
         generator = object.__new__(ScenarioGenerator)
         generator.llm = SimpleNamespace(
@@ -101,7 +101,7 @@ class PropagationTests(unittest.TestCase):
 
     def test_the_generator_does_not_retry_what_the_client_already_judged(self):
         """Three generation attempts over three client attempts is nine calls."""
-        from ronin.testing.generator import ScenarioGenerator
+        from yewo.testing.generator import ScenarioGenerator
 
         generator = self._generator(ProviderUnavailable("spent"))
 
@@ -113,7 +113,7 @@ class PropagationTests(unittest.TestCase):
 
     def test_a_schema_mismatch_is_still_retried_by_the_generator(self):
         """That loop is for a model that answered badly, and it stays."""
-        from ronin.testing.generator import GENERATION_ATTEMPTS, ScenarioGenerator
+        from yewo.testing.generator import GENERATION_ATTEMPTS, ScenarioGenerator
 
         mismatch = ValidationError.from_exception_data("ScenarioDraft", [])
         generator = self._generator(mismatch)
@@ -128,27 +128,27 @@ class PropagationTests(unittest.TestCase):
 
     def test_the_transition_judge_does_not_report_an_outage_as_thin_evidence(self):
         """Missing evidence blames the run for something the service did."""
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         agent = object.__new__(QAAgent)
         agent._fast_llm = SimpleNamespace()
         agent._device_agent = SimpleNamespace(scrubber=SimpleNamespace(scrub=str))
 
         with mock.patch(
-            "ronin.testing.judge.transitions.settle",
+            "yewo.testing.judge.transitions.settle",
             side_effect=ProviderUnavailable("spent"),
         ), self.assertRaises(ProviderUnavailable):
             agent._settled_transitions(SimpleNamespace(expected_outcomes=[]), [])
 
     def test_the_transition_judge_still_answers_nothing_for_its_own_failures(self):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         agent = object.__new__(QAAgent)
         agent._fast_llm = SimpleNamespace()
         agent._device_agent = SimpleNamespace(scrubber=SimpleNamespace(scrub=str))
 
         with mock.patch(
-            "ronin.testing.judge.transitions.settle",
+            "yewo.testing.judge.transitions.settle",
             side_effect=ValueError("the screen names did not line up"),
         ):
             self.assertEqual(
@@ -172,8 +172,8 @@ class SuiteSurvivalTests(unittest.TestCase):
         from unittest.mock import patch
 
         from fakes import walk
-        from ronin.testing.models import GeneratedTestCase, ScenarioReport, UserJourney
-        from ronin.testing.runner import RoninTestRunner
+        from yewo.testing.models import GeneratedTestCase, ScenarioReport, UserJourney
+        from yewo.testing.runner import YewoTestRunner
 
         def scenario(number: int) -> GeneratedTestCase:
             return GeneratedTestCase(
@@ -215,13 +215,13 @@ class SuiteSurvivalTests(unittest.TestCase):
                 pass
 
             def generate_suite(self, _journey, _cells=None):
-                from ronin.testing.generator import GeneratedSuite
+                from yewo.testing.generator import GeneratedSuite
 
                 return GeneratedSuite(scenarios=list(scenarios))
 
         class Agent:
             def __init__(self, *_, **__):
-                from ronin.utils.secrets import SecretScrubber
+                from yewo.utils.secrets import SecretScrubber
 
                 llm = SimpleNamespace(usage_callback=None)
                 self._device_agent = SimpleNamespace(
@@ -246,14 +246,14 @@ class SuiteSurvivalTests(unittest.TestCase):
                 )
 
         with (
-            patch("ronin.testing.runner.DeviceSession", Session),
-            patch("ronin.testing.runner.ScenarioGenerator", Generator),
-            patch("ronin.testing.runner.QAAgent", Agent),
-            patch("ronin.testing.runner.ensure_device_ready"),
-            patch("ronin.testing.runner.for_grounding"),
-            patch("ronin.testing.runner.is_session_responsive", return_value=True),
+            patch("yewo.testing.runner.DeviceSession", Session),
+            patch("yewo.testing.runner.ScenarioGenerator", Generator),
+            patch("yewo.testing.runner.QAAgent", Agent),
+            patch("yewo.testing.runner.ensure_device_ready"),
+            patch("yewo.testing.runner.for_grounding"),
+            patch("yewo.testing.runner.is_session_responsive", return_value=True),
         ):
-            report = RoninTestRunner(
+            report = YewoTestRunner(
                 device_name="Pixel_8", app_path="app.apk"
             ).run_journey(UserJourney(id="j", name="J", description="A journey"))
         return report, asked
@@ -295,13 +295,13 @@ class TerminalPropagationTests(unittest.TestCase):
 
     def test_a_rejected_key_leaves_the_transition_judge_too(self):
         """Answering with no verdicts would read as a thin audit of a good run."""
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         agent = object.__new__(QAAgent)
         agent._fast_llm = SimpleNamespace()
         agent._device_agent = SimpleNamespace(scrubber=SimpleNamespace(scrub=str))
 
         with mock.patch(
-            "ronin.testing.judge.transitions.settle", side_effect=refused()
+            "yewo.testing.judge.transitions.settle", side_effect=refused()
         ), self.assertRaises(exceptions.AuthenticationError):
             agent._settled_transitions(SimpleNamespace(expected_outcomes=[]), [])

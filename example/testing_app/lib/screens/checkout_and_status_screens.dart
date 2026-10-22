@@ -236,7 +236,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'RONIN TESTER',
+                          'YEWO TESTER',
                           style: TextStyle(color: Colors.white70, fontSize: 12),
                         ),
                         Text(

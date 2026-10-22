@@ -8,10 +8,10 @@ for first and discovered afterwards, one failed scenario at a time.
 import unittest
 from unittest.mock import patch
 
-from ronin.agent.device.adb_control import AdbControl
-from ronin.agent.device.platform import Platform
-from ronin.agent.device.readiness import ensure_device_ready
-from ronin.errors import DeviceUnavailable
+from yewo.agent.device.adb_control import AdbControl
+from yewo.agent.device.platform import Platform
+from yewo.agent.device.readiness import ensure_device_ready
+from yewo.errors import DeviceUnavailable
 
 
 class AndroidReadinessTests(unittest.TestCase):
@@ -32,7 +32,7 @@ class AndroidReadinessTests(unittest.TestCase):
         self._check({"emulator-5554": "device"}, "emulator-5554")
 
     def test_a_named_emulator_that_exists_may_be_started(self):
-        """Nothing attached, but Ronin can boot the one the file names."""
+        """Nothing attached, but Yewo can boot the one the file names."""
         self._check({}, None)
 
     def test_another_device_being_attached_is_not_a_problem(self):
@@ -95,7 +95,7 @@ class DeviceStateTests(unittest.TestCase):
 
     def _devices(self, stdout):
         with patch(
-            "ronin.agent.device.adb_control.run_command",
+            "yewo.agent.device.adb_control.run_command",
             return_value=type("R", (), {"stdout": stdout})(),
         ):
             return AdbControl.attached_devices()

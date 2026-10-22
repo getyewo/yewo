@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const Icon(Icons.fastfood, size: 64, color: Colors.deepOrange),
           const SizedBox(height: 16),
           Text(
-            'Ronin Fast Food Delivery',
+            'Yewo Fast Food Delivery',
             style: TextStyle(
               fontSize: 24 * widget.fontScale,
               fontWeight: FontWeight.bold,

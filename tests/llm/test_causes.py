@@ -8,7 +8,7 @@ a scenario, and all three want a different answer.
 import unittest
 from types import SimpleNamespace
 
-from ronin.errors import (
+from yewo.errors import (
     ArtifactWriteFailed,
     Cause,
     DeviceUnavailable,
@@ -20,7 +20,7 @@ from ronin.errors import (
 class ClassifyTests(unittest.TestCase):
     """Read from the exception's type, never from its words."""
 
-    def test_a_device_ronin_cannot_drive(self):
+    def test_a_device_yewo_cannot_drive(self):
         self.assertIs(cause_of(DeviceUnavailable("offline")), Cause.DEVICE)
         self.assertIs(cause_of(ObservationUnavailable("no screen")), Cause.DEVICE)
 
@@ -38,7 +38,7 @@ class ClassifyTests(unittest.TestCase):
 
         self.assertIs(cause_of(failure), Cause.PROVIDER)
 
-    def test_an_artifact_ronin_could_not_write(self):
+    def test_an_artifact_yewo_could_not_write(self):
         self.assertIs(cause_of(ArtifactWriteFailed("read-only")), Cause.ARTIFACT)
 
     def test_anything_unrecognised_claims_nothing(self):
@@ -55,7 +55,7 @@ class VerdictCauseTests(unittest.TestCase):
     """Every answer that is not PASSED or FAILED says whose problem it is."""
 
     def _verdict(self, **overrides):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         values = {
             "run_result": SimpleNamespace(
@@ -92,7 +92,7 @@ class VerdictCauseTests(unittest.TestCase):
         self.assertIs(cause, Cause.UNKNOWN)
 
     def test_a_run_that_never_settled_is_the_agent(self):
-        """Ronin drove the app and never reached a state worth judging."""
+        """Yewo drove the app and never reached a state worth judging."""
         for status in ("loop_detected", "step_limit"):
             _status, _reason, cause = self._verdict(run_result=self._run(status))
 
@@ -106,7 +106,7 @@ class VerdictCauseTests(unittest.TestCase):
         self.assertIs(cause, Cause.EVIDENCE)
 
     def test_a_scenario_that_asked_the_unanswerable_is_the_scenario(self):
-        from ronin.testing.models import AssertionScope, ExpectedOutcome
+        from yewo.testing.models import AssertionScope, ExpectedOutcome
 
         _status, _reason, cause = self._verdict(
             required_outcomes=[
@@ -135,7 +135,7 @@ class VerdictCauseTests(unittest.TestCase):
         self.assertIs(cause, Cause.SCENARIO)
 
     def test_a_pass_needs_no_cause(self):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         status, _reason, cause = self._verdict(
             all_verifications=[
@@ -169,7 +169,7 @@ class RecordedCauseTests(unittest.TestCase):
 
     def test_the_run_records_a_cause_and_not_a_string(self):
         """Typed on DeviceRunResult, so no reader converts or guesses."""
-        from ronin.agent.run.outcomes import DeviceRunResult
+        from yewo.agent.run.outcomes import DeviceRunResult
 
         field = DeviceRunResult.__dataclass_fields__["cause"]
 
@@ -178,7 +178,7 @@ class RecordedCauseTests(unittest.TestCase):
     def test_the_gate_reports_the_cause_the_run_recorded(self):
         from types import SimpleNamespace
 
-        from ronin.testing.judge.verdicts import _terminal_outcome
+        from yewo.testing.judge.verdicts import _terminal_outcome
 
         status, _reason, cause = _terminal_outcome(
             run_result=SimpleNamespace(
@@ -196,7 +196,7 @@ class RecordedCauseTests(unittest.TestCase):
     def test_a_run_that_recorded_nothing_reports_unknown(self):
         from types import SimpleNamespace
 
-        from ronin.testing.judge.verdicts import _terminal_outcome
+        from yewo.testing.judge.verdicts import _terminal_outcome
 
         _status, _reason, cause = _terminal_outcome(
             run_result=SimpleNamespace(

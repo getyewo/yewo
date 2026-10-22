@@ -4,13 +4,13 @@ import unittest
 
 from fakes import walk
 
-from ronin.testing.report import infrastructure
+from yewo.testing.report import infrastructure
 from types import SimpleNamespace
 
 
 class VerdictTests(unittest.TestCase):
     def _agent(self):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         return QAAgent.__new__(QAAgent)
 
@@ -61,7 +61,7 @@ class VerdictTests(unittest.TestCase):
         self.assertIn("expected:0", reason)
 
     def test_security_rule_a_scenario_never_reached_is_not_required(self):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         status, reason = self._verdict(
             required_outcomes=["Order is confirmed"],
@@ -79,7 +79,7 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(status, "PASSED", reason)
 
     def test_security_rule_the_planner_reported_untested_is_required(self):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         status, reason = self._verdict(
             required_outcomes=[],
@@ -98,7 +98,7 @@ class VerdictTests(unittest.TestCase):
         self.assertIn("security:0", reason)
 
     def test_all_required_verifications_can_pass(self):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         status, reason = self._verdict(
             required_outcomes=["Order is confirmed"],
@@ -129,7 +129,7 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(status, "ERROR")
 
     def test_all_skipped_suite_is_not_a_pass(self):
-        from ronin.testing.runner import aggregate_journey_status
+        from yewo.testing.runner import aggregate_journey_status
 
         self.assertEqual(aggregate_journey_status(0, 0), "FAILED")
         self.assertEqual(aggregate_journey_status(1, 0), "PASSED")
@@ -146,7 +146,7 @@ class FirstLookTests(unittest.TestCase):
         )
 
     def _assessment(self, crash=False):
-        from ronin.testing.models import QAIssue
+        from yewo.testing.models import QAIssue
 
         issues = []
         if crash:
@@ -161,7 +161,7 @@ class FirstLookTests(unittest.TestCase):
         return SimpleNamespace(detected_issues=issues)
 
     def test_a_crash_on_the_first_look_is_withdrawn(self):
-        from ronin.testing.qa_agent import _defer_first_look
+        from yewo.testing.qa_agent import _defer_first_look
 
         response, assessment = self._response(), self._assessment(crash=True)
 
@@ -170,7 +170,7 @@ class FirstLookTests(unittest.TestCase):
         self.assertEqual(response.action.type, "wait")
 
     def test_a_crash_seen_later_stands(self):
-        from ronin.testing.qa_agent import _defer_first_look
+        from yewo.testing.qa_agent import _defer_first_look
 
         response, assessment = self._response(), self._assessment(crash=True)
 
@@ -178,7 +178,7 @@ class FirstLookTests(unittest.TestCase):
         self.assertEqual(len(assessment.detected_issues), 1)
 
     def test_infeasibility_on_the_first_look_is_withdrawn(self):
-        from ronin.testing.qa_agent import _defer_first_look
+        from yewo.testing.qa_agent import _defer_first_look
 
         response, assessment = self._response(feasible=False), self._assessment()
 
@@ -187,7 +187,7 @@ class FirstLookTests(unittest.TestCase):
         self.assertEqual(response.action.type, "wait")
 
     def test_infeasibility_seen_later_stands(self):
-        from ronin.testing.qa_agent import _defer_first_look
+        from yewo.testing.qa_agent import _defer_first_look
 
         response, assessment = self._response(feasible=False), self._assessment()
 
@@ -195,7 +195,7 @@ class FirstLookTests(unittest.TestCase):
         self.assertFalse(response.is_scenario_feasible)
 
     def test_a_healthy_first_look_is_left_alone(self):
-        from ronin.testing.qa_agent import _defer_first_look
+        from yewo.testing.qa_agent import _defer_first_look
 
         response, assessment = self._response(), self._assessment()
 
@@ -204,8 +204,8 @@ class FirstLookTests(unittest.TestCase):
 
     def test_withdrawing_a_verdict_replaces_the_done_that_came_with_it(self):
         """Clearing the verdict alone changes the label. The loop still acts on `done`."""
-        from ronin.agent.actuation.actions import ActionType
-        from ronin.testing.qa_agent import _defer_first_look
+        from yewo.agent.actuation.actions import ActionType
+        from yewo.testing.qa_agent import _defer_first_look
 
         response, assessment = self._response(), self._assessment(crash=True)
 
@@ -219,7 +219,7 @@ class VerificationAggregationTests(unittest.TestCase):
     """Every rule is re-evaluated on every screen, so answers pile up per rule."""
 
     def _verification(self, rule_id, status, applicable=True, rule="A rule"):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         return RuleVerification(
             rule=rule,
@@ -230,7 +230,7 @@ class VerificationAggregationTests(unittest.TestCase):
         )
 
     def _verdict(self, **overrides):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         values = {
             "run_result": SimpleNamespace(status="goal_reached", failure_reason=None),
@@ -355,7 +355,7 @@ class SecurityCoverageTests(unittest.TestCase):
     """Scoping rules per scenario leaves a hole, and the suite has to close it."""
 
     def _scenario(self, verifications):
-        from ronin.testing.models import RuleVerification, ScenarioReport
+        from yewo.testing.models import RuleVerification, ScenarioReport
 
         return ScenarioReport(
             test_id="TS_1",
@@ -375,7 +375,7 @@ class SecurityCoverageTests(unittest.TestCase):
         )
 
     def _unevidenced(self, rules, scenarios):
-        from ronin.testing.judge.coverage import unevidenced_security_rules
+        from yewo.testing.judge.coverage import unevidenced_security_rules
 
         return unevidenced_security_rules(rules, scenarios)
 
@@ -422,7 +422,7 @@ class AbortReportingTests(unittest.TestCase):
         self.assertIn("no scenarios", reports[0].failure_reason)
 
     def test_unfinished_scenarios_are_each_recorded(self):
-        from ronin.testing.models import GeneratedTestCase, ScenarioReport
+        from yewo.testing.models import GeneratedTestCase, ScenarioReport
 
         planned = [
             GeneratedTestCase(
@@ -460,7 +460,7 @@ class RuleIdentityTests(unittest.TestCase):
     """
 
     def _verification(self, **fields):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         return RuleVerification(status="passed", reasoning="because", **fields)
 
@@ -519,7 +519,7 @@ class EvidenceReachesTheGateTests(unittest.TestCase):
     """An answered outcome must settle its rule, not report as unevidenced."""
 
     def _verdict(self, verifications, required):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         status, reason, _cause = QAAgent.__new__(QAAgent)._determine_status(
             run_result=SimpleNamespace(status="goal_reached", failure_reason=None),
@@ -536,7 +536,7 @@ class EvidenceReachesTheGateTests(unittest.TestCase):
         return status, reason
 
     def test_an_outcome_answered_in_the_rule_field_passes_the_scenario(self):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         answered = RuleVerification(
             rule="expected:0", status="passed", reasoning="The screen shows it"

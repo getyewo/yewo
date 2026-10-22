@@ -1,6 +1,6 @@
-"""One ronin.yaml holding both the settings and the tests.
+"""One yewo.yaml holding both the settings and the tests.
 
-The settings say how Ronin runs; the journeys say what it runs. They now live
+The settings say how Yewo runs; the journeys say what it runs. They now live
 in the same file, so reading it has to tell them apart, and writing to it has
 to keep the half it was not asked about.
 """
@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 
 import yaml
 
-from ronin.config import (
+from yewo.config import (
     ConfigError,
     expand_device,
     load_config,
@@ -38,7 +38,7 @@ workflows:
 
 
 class DeviceBlockTests(unittest.TestCase):
-    """`device` names a target in a block, and the rest of Ronin resolves it flat."""
+    """`device` names a target in a block, and the rest of Yewo resolves it flat."""
 
     def test_a_block_becomes_the_settings_it_stands_for(self):
         expanded = expand_device(
@@ -61,7 +61,7 @@ class DeviceBlockTests(unittest.TestCase):
     def test_a_device_that_is_neither_is_refused(self):
         """A list here would otherwise be coerced into a device name."""
         with self.assertRaises(ConfigError):
-            expand_device({"device": ["Pixel_8"]}, "ronin.yaml")
+            expand_device({"device": ["Pixel_8"]}, "yewo.yaml")
 
 
 class ReadFileTests(unittest.TestCase):
@@ -69,14 +69,14 @@ class ReadFileTests(unittest.TestCase):
 
     def _read(self, text):
         with TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.yaml"
+            path = Path(directory) / "yewo.yaml"
             path.write_text(text, encoding="utf-8")
-            with self.assertLogs("ronin.config", level="WARNING") as captured:
+            with self.assertLogs("yewo.config", level="WARNING") as captured:
                 settings = read_file(path)
                 # assertLogs fails an otherwise silent read, so give it one.
                 import logging
 
-                logging.getLogger("ronin.config").warning("probe")
+                logging.getLogger("yewo.config").warning("probe")
             return settings, [line for line in captured.output if "probe" not in line]
 
     def test_the_settings_are_read_through_the_device_block(self):
@@ -113,7 +113,7 @@ class WriteTests(unittest.TestCase):
     """A write keeps the half of the file it was not asked about."""
 
     def _file(self, directory, text=SUITE):
-        path = Path(directory) / "ronin.yaml"
+        path = Path(directory) / "yewo.yaml"
         path.write_text(text, encoding="utf-8")
         return path
 
@@ -163,7 +163,7 @@ class WriteTests(unittest.TestCase):
     def test_a_journey_is_still_readable_after_a_write(self):
         """Prose written as a block must not come back as one long quoted line.
 
-        This file is edited by hand, so `ronin devices use` has to leave it
+        This file is edited by hand, so `yewo devices use` has to leave it
         in the shape a person wrote it.
         """
         prose = "A user opens the app.\nThey tap the add button.\n"
@@ -211,34 +211,34 @@ class LoadConfigTests(unittest.TestCase):
 
     def test_the_project_file_supplies_the_settings(self):
         with TemporaryDirectory() as directory:
-            Path(directory, "ronin.yaml").write_text(SUITE, encoding="utf-8")
+            Path(directory, "yewo.yaml").write_text(SUITE, encoding="utf-8")
 
             config = load_config(start=Path(directory))
 
             self.assertEqual(config.get("device"), "Pixel_8")
-            self.assertIn("ronin.yaml", config.origin("device"))
+            self.assertIn("yewo.yaml", config.origin("device"))
 
     def test_an_env_variable_still_overrides_the_file(self):
         """The way to run one file against another machine's device."""
         with TemporaryDirectory() as directory:
-            Path(directory, "ronin.yaml").write_text(SUITE, encoding="utf-8")
+            Path(directory, "yewo.yaml").write_text(SUITE, encoding="utf-8")
 
-            with unittest.mock.patch.dict("os.environ", {"RONIN_DEVICE": "Pixel_9"}):
+            with unittest.mock.patch.dict("os.environ", {"YEWO_DEVICE": "Pixel_9"}):
                 config = load_config(start=Path(directory))
 
             self.assertEqual(config.get("device"), "Pixel_9")
-            self.assertEqual(config.origin("device"), "RONIN_DEVICE")
+            self.assertEqual(config.origin("device"), "YEWO_DEVICE")
 
 
 class SchemaBackedSettingsTests(unittest.TestCase):
-    """`ronin config` and the journey loader read the same file.
+    """`yewo config` and the journey loader read the same file.
 
     Naming the settings twice meant a value could be saved here and refused
     by the run that read it back.
     """
 
     def test_a_value_outside_the_enum_is_refused(self):
-        from ronin.config import coerce
+        from yewo.config import coerce
 
         with self.assertRaises(ConfigError) as caught:
             coerce("platform", "androdi")
@@ -246,25 +246,25 @@ class SchemaBackedSettingsTests(unittest.TestCase):
         self.assertIn("androdi", str(caught.exception))
 
     def test_a_value_inside_the_enum_is_kept(self):
-        from ronin.config import coerce
+        from yewo.config import coerce
 
         self.assertEqual(coerce("platform", "ios"), "ios")
 
     def test_a_number_below_its_floor_is_refused(self):
-        from ronin.config import coerce
+        from yewo.config import coerce
 
         with self.assertRaises(ConfigError):
             coerce("max_steps", 0)
 
     def test_values_are_still_coerced_from_their_written_form(self):
-        from ronin.config import coerce
+        from yewo.config import coerce
 
         self.assertEqual(coerce("max_steps", "25"), 25)
         self.assertIs(coerce("record", "no"), False)
 
     def test_the_settings_are_the_ones_the_schema_declares(self):
-        from ronin.config import SETTINGS
-        from ronin.schema import Settings
+        from yewo.config import SETTINGS
+        from yewo.schema import Settings
 
         aliases = {"app", "emulator", "record_session"}
         self.assertEqual(SETTINGS, set(Settings.model_fields) - aliases)
@@ -273,32 +273,32 @@ class SchemaBackedSettingsTests(unittest.TestCase):
 class OneDeclarationTests(unittest.TestCase):
     """The file's shape is declared once, and everything else follows it.
 
-    A second list of the same settings drifts quietly: `ronin config set`
+    A second list of the same settings drifts quietly: `yewo config set`
     accepted a platform the loader then refused, and a journey file's own
     keys were reported as misspelled settings while the run used them.
     """
 
     def test_every_setting_has_a_default(self):
         """config.get() reads BUILT_IN, so a field without one raises KeyError."""
-        from ronin.config import BUILT_IN, SETTINGS
+        from yewo.config import BUILT_IN, SETTINGS
 
         self.assertEqual(SETTINGS, set(BUILT_IN))
 
     def test_the_keys_that_are_not_settings_are_known_to_be_structure(self):
         """A journey file's own id and name are not misspelled settings."""
-        from ronin.config import STRUCTURE_KEYS
-        from ronin.schema import RoninFile, Settings
+        from yewo.config import STRUCTURE_KEYS
+        from yewo.schema import YewoFile, Settings
 
-        structural = set(RoninFile.model_fields) - set(Settings.model_fields)
+        structural = set(YewoFile.model_fields) - set(Settings.model_fields)
         self.assertEqual(set(STRUCTURE_KEYS), structural)
 
     def test_the_platform_enum_matches_the_schema(self):
         """Platform.named() and the schema must accept the same words."""
         import typing
 
-        from ronin.agent.device.platform import Platform
-        from ronin.schema import PLATFORMS
-        from ronin.schema import Platform as PlatformLiteral
+        from yewo.agent.device.platform import Platform
+        from yewo.schema import PLATFORMS
+        from yewo.schema import Platform as PlatformLiteral
 
         self.assertEqual(set(PLATFORMS), set(typing.get_args(PlatformLiteral)))
         self.assertEqual({p.value for p in Platform}, set(PLATFORMS))
@@ -306,13 +306,13 @@ class OneDeclarationTests(unittest.TestCase):
     def test_the_grounding_constants_match_the_schema(self):
         import typing
 
-        from ronin.agent.grounding import (
+        from yewo.agent.grounding import (
             GROUNDING_COORDINATES,
             GROUNDING_DESCRIBE,
             GROUNDING_MARKS,
         )
-        from ronin.schema import GROUNDINGS
-        from ronin.schema import Grounding as GroundingLiteral
+        from yewo.schema import GROUNDINGS
+        from yewo.schema import Grounding as GroundingLiteral
 
         self.assertEqual(set(GROUNDINGS), set(typing.get_args(GroundingLiteral)))
         self.assertEqual(
@@ -320,7 +320,7 @@ class OneDeclarationTests(unittest.TestCase):
         )
 
     def test_the_defaults_are_values_the_schema_allows(self):
-        from ronin.config import BUILT_IN, coerce
+        from yewo.config import BUILT_IN, coerce
 
         for name, value in BUILT_IN.items():
             if value is not None:
@@ -328,10 +328,10 @@ class OneDeclarationTests(unittest.TestCase):
 
     def test_the_command_line_offers_what_the_schema_allows(self):
         """A flag choice the schema refuses fails after the run starts."""
-        from ronin.schema import GROUNDINGS, PLATFORMS
-        from ronin.testing.cli import RoninCLI
+        from yewo.schema import GROUNDINGS, PLATFORMS
+        from yewo.testing.cli import YewoCLI
 
-        parser = RoninCLI.__new__(RoninCLI)._create_parser()
+        parser = YewoCLI.__new__(YewoCLI)._create_parser()
         choices = {
             action.dest: set(action.choices)
             for action in parser._actions

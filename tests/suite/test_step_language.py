@@ -11,8 +11,8 @@ typed step needs none of it.
 
 import unittest
 
-from ronin.agent.actuation.actions import ActionType, CapabilityKind
-from ronin.testing.step_language import (
+from yewo.agent.actuation.actions import ActionType, CapabilityKind
+from yewo.testing.step_language import (
     ACTION_VERBS,
     ASSERTION_VERBS,
     RUN_VERBS,
@@ -34,7 +34,7 @@ class DerivationTests(unittest.TestCase):
         for kind, verbs in VERBS_BY_CAPABILITY.items():
             self.assertTrue(verbs, kind)
 
-    def test_no_verb_names_something_ronin_cannot_do(self):
+    def test_no_verb_names_something_yewo_cannot_do(self):
         """The hand-written list allowed all five, and none of them is shipped."""
         for absent in ("rotate", "lock", "unlock", "background", "foreground"):
             self.assertNotIn(absent, ACTION_VERBS, absent)

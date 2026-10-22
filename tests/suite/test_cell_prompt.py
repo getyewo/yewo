@@ -7,11 +7,11 @@ one app, and no invitation to invent a value.
 
 import unittest
 
-from ronin.agent.actuation.actions import CapabilityKind
-from ronin.testing.generator import CAPABILITY_BY_CATEGORY, ScenarioGenerator, _requirements
-from ronin.testing.models import Actor, UserJourney
-from ronin.testing.step_language import ACTION_VERBS
-from ronin.testing.taxonomy import (
+from yewo.agent.actuation.actions import CapabilityKind
+from yewo.testing.generator import CAPABILITY_BY_CATEGORY, ScenarioGenerator, _requirements
+from yewo.testing.models import Actor, UserJourney
+from yewo.testing.step_language import ACTION_VERBS
+from yewo.testing.taxonomy import (
     Category,
     CoverageCell,
     Priority,

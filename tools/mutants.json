@@ -2,91 +2,91 @@
   {
     "name": "crash-ranked-after-the-infeasible-stop",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "    if any(issue.issue_type == \"crash_screen\" for issue in issues):\n        return \"FAILED\", \"App crashed: crash screen detected.\", None\n",
     "replace": ""
   },
   {
     "name": "settled-reads-failed-instead-of-passed",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "        if verification.status == \"passed\"\n    }\n\n\ndef _violated_security_rule",
     "replace": "        if verification.status == \"failed\"\n    }\n\n\ndef _violated_security_rule"
   },
   {
     "name": "per-screen-collapses-the-screen",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "latest[(verification.rule_id, verification.screen_name or \"\")] = verification",
     "replace": "latest[(verification.rule_id, \"\")] = verification"
   },
   {
     "name": "unprovable-refuses-nothing",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/rules.py",
+    "path": "src/yewo/testing/judge/rules.py",
     "find": "    return [\n        rule_id(EXPECTED, index)\n        for index, outcome in enumerate(outcomes or [])",
     "replace": "    return [\n        rule_id(EXPECTED, index)\n        for index, outcome in enumerate(())"
   },
   {
     "name": "unconfirmed-capabilities-reports-none",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/capabilities.py",
+    "path": "src/yewo/testing/judge/capabilities.py",
     "find": "    confirmed = {receipt.capability for receipt in receipts if receipt.confirmed}",
     "replace": "    confirmed = {kind.value for kind in required}\n    receipts = list(receipts)"
   },
   {
     "name": "missing-required-ids-reports-none",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "    return sorted(required_ids - settled - (evidenced & security_ids))",
     "replace": "    _ = required_ids, settled, evidenced, security_ids\n    return []"
   },
   {
     "name": "an-exposure-claim-always-stands",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "    here = [finding for finding in (findings or []) if finding.screen_name == issue.current_screen]\n    return bool(here) and not any(finding.is_exposure() for finding in here)",
     "replace": "    _ = findings\n    return False"
   },
   {
     "name": "a-scenario-with-no-outcome-passes",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/decide.py",
+    "path": "src/yewo/testing/judge/decide.py",
     "find": "    if not required_outcomes:\n        return Verdict(\n            \"UNVERIFIED\",\n            \"The scenario declared no expected outcome, so reaching the goal \"\n            \"rests on the planner's own word.\",\n            Cause.SCENARIO,\n        )\n",
     "replace": ""
   },
   {
     "name": "a-run-with-nothing-audited-passes",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/decide.py",
+    "path": "src/yewo/testing/judge/decide.py",
     "find": "    if run_result.status != \"goal_reached\" or not assessments:",
     "replace": "    if run_result.status != \"goal_reached\":"
   },
   {
     "name": "the-planner's-infeasibility-is-ignored",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "    if outputs and not outputs[-1].is_scenario_feasible:",
     "replace": "    if outputs and not outputs[-1].is_scenario_feasible and False:"
   },
   {
     "name": "a-critical-issue-no-longer-fails",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "    if critical:\n        return \"FAILED\", f\"Critical QA issue: {critical.description}\", None",
     "replace": "    if critical and False:\n        return \"FAILED\", f\"Critical QA issue: {critical.description}\", None"
   },
   {
     "name": "a-security-violation-reads-as-any-failed-rule",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/verdicts.py",
+    "path": "src/yewo/testing/judge/verdicts.py",
     "find": "    violated = _violated_security_rule(verifications)",
     "replace": "    violated = None"
   },
   {
     "name": "an-exception-loses-its-cause",
     "owner": "judge",
-    "path": "src/ronin/testing/judge/decide.py",
+    "path": "src/yewo/testing/judge/decide.py",
     "find": "    if terminal:\n        return Verdict(*terminal)",
     "replace": "    if terminal:\n        status, reason, _cause = terminal\n        return Verdict(status, reason, None)"
   },
@@ -247,7 +247,7 @@
   {
     "name": "an-impossible-run-status-is-accepted",
     "owner": "gate",
-    "path": "src/ronin/agent/run/outcomes.py",
+    "path": "src/yewo/agent/run/outcomes.py",
     "find": "RunStatus = Literal[\n    \"goal_reached\", \"step_limit\", \"loop_detected\", \"hook_stop\", \"exception\"\n]",
     "replace": "RunStatus = str"
   },
@@ -303,91 +303,91 @@
   {
     "name": "a-quoted-rule-is-never-matched",
     "owner": "gate",
-    "path": "src/ronin/testing/judge/qa_auditor.py",
+    "path": "src/yewo/testing/judge/qa_auditor.py",
     "find": "            found = self._by_statement.get((verification.rule or \"\").strip())\n            if found:\n                verification.rule_id = found",
     "replace": "            pass"
   },
   {
     "name": "two-rules-reading-alike-are-resolved-anyway",
     "owner": "gate",
-    "path": "src/ronin/testing/judge/rules.py",
+    "path": "src/yewo/testing/judge/rules.py",
     "find": "    for text in twice:\n        found.pop(text, None)",
     "replace": "    twice.clear()"
   },
   {
     "name": "a-rules-words-map-to-the-wrong-kind",
     "owner": "gate",
-    "path": "src/ronin/testing/judge/rules.py",
+    "path": "src/yewo/testing/judge/rules.py",
     "find": "    for kind, listed in ((EXPECTED, expected_outcomes), (SECURITY, security_rules)):",
     "replace": "    for kind, listed in ((EXPECTED, expected_outcomes), (EXPECTED, security_rules)):"
   },
   {
     "name": "a-blanked-outcome-renumbers-the-rest",
     "owner": "gate",
-    "path": "src/ronin/testing/judge/rules.py",
+    "path": "src/yewo/testing/judge/rules.py",
     "find": "        for index, rule in enumerate(listed or []):\n            if rule is None:\n                continue\n            text = statement_of(rule).strip()",
     "replace": "        for index, rule in enumerate([r for r in (listed or []) if r is not None]):\n            text = statement_of(rule).strip()"
   },
   {
     "name": "an-audit-naming-nothing-is-not-asked-again",
     "owner": "gate",
-    "path": "src/ronin/testing/judge/qa_auditor.py",
+    "path": "src/yewo/testing/judge/qa_auditor.py",
     "find": "        if self._asked and not self._any_listed(assessment):",
     "replace": "        if False:"
   },
   {
     "name": "an-audit-is-asked-again-without-end",
     "owner": "gate",
-    "path": "src/ronin/testing/judge/qa_auditor.py",
+    "path": "src/yewo/testing/judge/qa_auditor.py",
     "find": "            assessment = self._answered(message)\n        self._clean(assessment)",
     "replace": "            while not self._any_listed(assessment):\n                assessment = self._answered(message)\n        self._clean(assessment)"
   },
   {
     "name": "an-audit-that-answered-is-asked-again",
     "owner": "gate",
-    "path": "src/ronin/testing/judge/qa_auditor.py",
+    "path": "src/yewo/testing/judge/qa_auditor.py",
     "find": "        if self._asked and not self._any_listed(assessment):",
     "replace": "        if self._asked:"
   },
   {
     "name": "the-findings-never-reach-the-judge",
     "owner": "gate",
-    "path": "src/ronin/testing/qa_agent.py",
+    "path": "src/yewo/testing/qa_agent.py",
     "find": "            security_rules=security_rules,\n            all_findings=all_findings,\n        )",
     "replace": "            security_rules=security_rules,\n        )"
   },
   {
     "name": "a-report-carries-no-record-of-its-inputs",
     "owner": "gate",
-    "path": "src/ronin/testing/qa_agent.py",
+    "path": "src/yewo/testing/qa_agent.py",
     "find": "            verdict_inputs=_verdict_inputs(",
     "replace": "            verdict_inputs=None and _verdict_inputs("
   },
   {
     "name": "the-planners-last-word-is-not-carried",
     "owner": "gate",
-    "path": "src/ronin/testing/qa_agent.py",
+    "path": "src/yewo/testing/qa_agent.py",
     "find": "    last = qa_outputs[-1] if qa_outputs else None",
     "replace": "    last = qa_outputs[0] if qa_outputs else None"
   },
   {
     "name": "an-old-record-is-decided-from-half-its-inputs",
     "owner": "gate",
-    "path": "src/ronin/testing/rejudge.py",
+    "path": "src/yewo/testing/rejudge.py",
     "find": "    if schema < FIRST_WITH_INPUTS or not entry.get(\"verdict_inputs\"):",
     "replace": "    if False:"
   },
   {
     "name": "the-judges-inputs-reach-the-record-unmasked",
     "owner": "gate",
-    "path": "src/ronin/testing/report/manifest.py",
+    "path": "src/yewo/testing/report/manifest.py",
     "find": "            entry.verdict_inputs = self._masked(report.verdict_inputs)",
     "replace": "            entry.verdict_inputs = report.verdict_inputs"
   },
   {
     "name": "a-record-that-is-not-one-reads-as-a-run-with-no-scenarios",
     "owner": "gate",
-    "path": "src/ronin/testing/rejudge.py",
+    "path": "src/yewo/testing/rejudge.py",
     "find": "    if not isinstance(record, dict) or \"scenarios\" not in record:\n        raise UsageError(f\"{path} does not hold a run record.\")",
     "replace": "    if not isinstance(record, dict) or \"scenarios\" not in record:\n        return 0, []"
   }

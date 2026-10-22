@@ -1,6 +1,6 @@
-"""Writes ronin-schema.json from the models that validate a ronin.yaml.
+"""Writes yewo-schema.json from the models that validate a yewo.yaml.
 
-Editors read the JSON Schema; Ronin reads the models. Generating one from the
+Editors read the JSON Schema; Yewo reads the models. Generating one from the
 other means a key cannot be offered by an editor and refused by a run.
 
     uv run python tools/emit_schema.py          # write
@@ -13,14 +13,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from ronin.schema import RoninFile  # noqa: E402
+from yewo.schema import YewoFile  # noqa: E402
 
-SCHEMA_PATH = Path(__file__).resolve().parent.parent / "ronin-schema.json"
-SCHEMA_ID = "https://raw.githubusercontent.com/Becca-Saka/ronin/master/ronin-schema.json"
+SCHEMA_PATH = Path(__file__).resolve().parent.parent / "yewo-schema.json"
+SCHEMA_ID = "https://raw.githubusercontent.com/Becca-Saka/yewo/master/yewo-schema.json"
 
 
 def build() -> str:
-    schema = RoninFile.model_json_schema()
+    schema = YewoFile.model_json_schema()
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "$id": SCHEMA_ID,

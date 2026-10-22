@@ -13,8 +13,8 @@ class RefusedMarkTests(unittest.TestCase):
     """
 
     def _marks(self, refuses_text=False):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
-        from ronin.agent.grounding.marks import Mark
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.grounding.marks import Mark
 
         element = GUIElement(
             element="Text",
@@ -26,18 +26,18 @@ class RefusedMarkTests(unittest.TestCase):
         return [Mark(index=17, element=element, refuses_text=refuses_text)]
 
     def _resolve(self, action, refuses_text):
-        from ronin.agent.plan.planner import GROUNDING_MARKS
-        from ronin.agent.step.targeting import resolve_mark
+        from yewo.agent.plan.planner import GROUNDING_MARKS
+        from yewo.agent.step.targeting import resolve_mark
 
         return resolve_mark(action, self._marks(refuses_text), GROUNDING_MARKS)
 
     def _type(self):
-        from ronin.agent.actuation.actions import TypeMarkAction
+        from yewo.agent.actuation.actions import TypeMarkAction
 
         return TypeMarkAction(mark=17, text="4111222233334444", reason="card")
 
     def _tap(self):
-        from ronin.agent.actuation.actions import TapMarkAction
+        from yewo.agent.actuation.actions import TapMarkAction
 
         return TapMarkAction(mark=17, reason="open it")
 
@@ -69,7 +69,7 @@ class RefusedMarkTests(unittest.TestCase):
         self.assertIsNotNone(resolved)
 
     def test_the_planner_is_told_which_numbers_hold_no_text(self):
-        from ronin.agent.grounding.marks import describe
+        from yewo.agent.grounding.marks import describe
 
         listing = describe(self._marks(refuses_text=True), height=2400)
 
@@ -82,13 +82,13 @@ class RefusalRecordingTests(unittest.TestCase):
     """Learning the fact, and carrying it to the next step's numbering."""
 
     def _ctx(self):
-        from ronin.agent.run.context import RunContext
+        from yewo.agent.run.context import RunContext
 
         return RunContext(history=None, loop_detector=None)
 
     def _marks_at(self, *boxes):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
-        from ronin.agent.grounding.marks import Mark
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.grounding.marks import Mark
 
         return [
             Mark(
@@ -108,7 +108,7 @@ class RefusalRecordingTests(unittest.TestCase):
 
     def test_one_failure_is_not_yet_proof(self):
         """A tap into the padding of a real field also leaves focus unmoved."""
-        from ronin.agent.grounding.marks import refuse_mark
+        from yewo.agent.grounding.marks import refuse_mark
 
         ctx = self._ctx()
         marks = self._marks_at((0, 0, 9, 9), (10, 20, 30, 40))
@@ -119,7 +119,7 @@ class RefusalRecordingTests(unittest.TestCase):
 
     def test_the_place_is_banned_on_the_second_failure(self):
         """A number is reading order over detections and does not survive them."""
-        from ronin.agent.grounding.marks import refuse_mark
+        from yewo.agent.grounding.marks import refuse_mark
 
         ctx = self._ctx()
         marks = self._marks_at((0, 0, 9, 9), (10, 20, 30, 40))
@@ -129,7 +129,7 @@ class RefusalRecordingTests(unittest.TestCase):
         self.assertEqual(ctx.refused_marks, {"screenA": [(10, 20, 30, 40)]})
 
     def test_a_second_failure_elsewhere_bans_neither(self):
-        from ronin.agent.grounding.marks import refuse_mark
+        from yewo.agent.grounding.marks import refuse_mark
 
         ctx = self._ctx()
         marks = self._marks_at((0, 0, 9, 9), (10, 20, 30, 40))
@@ -139,7 +139,7 @@ class RefusalRecordingTests(unittest.TestCase):
         self.assertEqual(ctx.refused_marks, {})
 
     def test_a_refusal_is_scoped_to_the_screen_it_happened_on(self):
-        from ronin.agent.grounding.marks import refuse_mark
+        from yewo.agent.grounding.marks import refuse_mark
 
         ctx = self._ctx()
         marks = self._marks_at((10, 20, 30, 40))
@@ -150,7 +150,7 @@ class RefusalRecordingTests(unittest.TestCase):
         self.assertEqual(set(ctx.refused_marks), {"screenA", "screenB"})
 
     def test_an_unidentified_screen_records_nothing(self):
-        from ronin.agent.grounding.marks import refuse_mark
+        from yewo.agent.grounding.marks import refuse_mark
 
         ctx = self._ctx()
         refuse_mark(ctx.text_strikes, ctx.refused_marks, None, 1, self._marks_at((10, 20, 30, 40)))
@@ -160,7 +160,7 @@ class RefusalRecordingTests(unittest.TestCase):
 
     def test_a_number_naming_nothing_records_nothing(self):
         """The planner can answer with a number the rebuild no longer has."""
-        from ronin.agent.grounding.marks import refuse_mark
+        from yewo.agent.grounding.marks import refuse_mark
 
         ctx = self._ctx()
         refuse_mark(ctx.text_strikes, ctx.refused_marks, "screenA", 99, self._marks_at((10, 20, 30, 40)))
@@ -170,8 +170,8 @@ class RefusalRecordingTests(unittest.TestCase):
 
     def test_focus_that_never_moved_raises_the_type_the_loop_records_on(self):
         """Any other rejection must not burn a number."""
-        from ronin.errors import ActionRejected, TargetNotInteractive
-        from ronin.agent.device.focus import Focus
+        from yewo.errors import ActionRejected, TargetNotInteractive
+        from yewo.agent.device.focus import Focus
 
         rect = {"x": 63, "y": 820, "width": 954, "height": 147}
         focus = Focus(SimpleNamespace(), screen_area=1080 * 2400)
@@ -195,9 +195,9 @@ class RefusalRecordingTests(unittest.TestCase):
 
         from PIL import Image
 
-        from ronin.agent.plan.planner import GROUNDING_MARKS
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
-        from ronin.agent.step.observation import number_targets
+        from yewo.agent.plan.planner import GROUNDING_MARKS
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.step.observation import number_targets
 
         png = io.BytesIO()
         Image.new("RGB", (1080, 2400), "white").save(png, format="PNG")
@@ -239,9 +239,9 @@ class RefusalRecordingTests(unittest.TestCase):
 
         from PIL import Image
 
-        from ronin.agent.plan.planner import GROUNDING_MARKS
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
-        from ronin.agent.step.observation import number_targets
+        from yewo.agent.plan.planner import GROUNDING_MARKS
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.step.observation import number_targets
 
         png = io.BytesIO()
         Image.new("RGB", (1080, 2400), "white").save(png, format="PNG")
@@ -282,9 +282,9 @@ class RefusalRecordingTests(unittest.TestCase):
 
         from PIL import Image
 
-        from ronin.agent.plan.planner import GROUNDING_MARKS
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
-        from ronin.agent.step.observation import number_targets
+        from yewo.agent.plan.planner import GROUNDING_MARKS
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.step.observation import number_targets
 
         png = io.BytesIO()
         Image.new("RGB", (1080, 2400), "white").save(png, format="PNG")
@@ -317,7 +317,7 @@ class ElementIdentityTests(unittest.TestCase):
     """Recognising one element across two looks at the same screen."""
 
     def _element(self, box):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
 
         return GUIElement(
             element="Text",
@@ -330,7 +330,7 @@ class ElementIdentityTests(unittest.TestCase):
         )
 
     def test_the_same_box_is_the_same_element(self):
-        from ronin.agent.grounding.marks import is_same_element
+        from yewo.agent.grounding.marks import is_same_element
 
         self.assertTrue(
             is_same_element(self._element((10, 300, 200, 340)), (10, 300, 200, 340))
@@ -338,7 +338,7 @@ class ElementIdentityTests(unittest.TestCase):
 
     def test_a_detector_nudging_the_box_is_still_the_same_element(self):
         """Detections wobble by a pixel or two between passes."""
-        from ronin.agent.grounding.marks import is_same_element
+        from yewo.agent.grounding.marks import is_same_element
 
         self.assertTrue(
             is_same_element(self._element((11, 301, 201, 341)), (10, 300, 200, 340))
@@ -350,14 +350,14 @@ class ElementIdentityTests(unittest.TestCase):
         Matching loosely here would refuse typing into the field below the one
         that actually took no text.
         """
-        from ronin.agent.grounding.marks import is_same_element
+        from yewo.agent.grounding.marks import is_same_element
 
         self.assertFalse(
             is_same_element(self._element((10, 330, 200, 370)), (10, 300, 200, 340))
         )
 
     def test_an_unrelated_box_is_a_different_element(self):
-        from ronin.agent.grounding.marks import is_same_element
+        from yewo.agent.grounding.marks import is_same_element
 
         self.assertFalse(
             is_same_element(self._element((10, 900, 200, 940)), (10, 300, 200, 340))

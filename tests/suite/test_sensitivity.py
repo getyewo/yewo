@@ -1,14 +1,14 @@
 """How sensitive each artifact is, and the one that decides a policy.
 
-Ronin masks declared values across every artifact but one. Nothing masks a
+Yewo masks declared values across every artifact but one. Nothing masks a
 video frame. These cases hold that difference to being declared in the record
 rather than remembered by whoever uploads it.
 """
 
 import unittest
 
-from ronin.testing.models import UserJourney
-from ronin.testing.sensitivity import (
+from yewo.testing.models import UserJourney
+from yewo.testing.sensitivity import (
     ARTIFACTS,
     RECORDING,
     Sensitivity,
@@ -44,8 +44,8 @@ class ClassTests(unittest.TestCase):
             },
         )
 
-    def test_only_what_ronin_never_touched_is_unmasked(self):
-        """The video and the device's own log. Ronin writes neither of them."""
+    def test_only_what_yewo_never_touched_is_unmasked(self):
+        """The video and the device's own log. Yewo writes neither of them."""
         unmasked = [
             artifact.kind
             for artifact in ARTIFACTS
@@ -56,7 +56,7 @@ class ClassTests(unittest.TestCase):
 
     def test_an_artifact_a_later_reader_needs_is_kept(self):
         """Retention is declared here and enforced nowhere. Nothing deletes a file."""
-        from ronin.testing.sensitivity import Retention
+        from yewo.testing.sensitivity import Retention
 
         kept = {
             artifact.kind
@@ -76,7 +76,7 @@ class ClassTests(unittest.TestCase):
                     self.assertFalse(artifact.exportable)
 
     def test_a_video_is_unmasked_whatever_the_journey_declared(self):
-        """A declaration says what Ronin masks, not what the app renders.
+        """A declaration says what Yewo masks, not what the app renders.
 
         A video holds another account's data, a notification that arrived
         mid-run, a token in a debug banner, or a credential the app made up.

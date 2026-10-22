@@ -1,7 +1,7 @@
 # The eval corpus
 
-Labelled cases that Ronin's own judging must answer correctly. It is a gate on
-Ronin, not a command a user runs against an app. `tools/eval_gate.py` reads it.
+Labelled cases that Yewo's own judging must answer correctly. It is a gate on
+Yewo, not a command a user runs against an app. `tools/eval_gate.py` reads it.
 
 ```bash
 python -m tools.eval_gate              # the deterministic corpus, free
@@ -19,9 +19,9 @@ where it happened.
 ## What it answers, and what it does not
 
 It answers one question: **did a change to a prompt, a rule or the verdict
-ranking make Ronin answer a labelled case differently?**
+ranking make Yewo answer a labelled case differently?**
 
-It does not answer whether Ronin is good, and it reports no rate. The corpus is
+It does not answer whether Yewo is good, and it reports no rate. The corpus is
 small, and it grows only as fast as a person labels a case. At this size a
 false-pass percentage moves by whole points on one item, which reads as a
 result and is noise. What an item answered is a fact. What the population does
@@ -34,7 +34,7 @@ is not knowable from here.
 No model and no device, so the same evidence gives the same verdict every time.
 One pass is enough, and an item is either correct or wrong.
 
-A fixture holds the arguments `ronin.testing.judge.decide.determine_status`
+A fixture holds the arguments `yewo.testing.judge.decide.determine_status`
 takes, and what it must answer:
 
 ```json
@@ -147,5 +147,5 @@ The first run of the screen corpus with credentials is what establishes which
 of its items the auditor actually gets right. That run happened: 30 calls
 against `openrouter/deepseek/deepseek-v4.1-flash`, every answered rule correct,
 and three calls that named no rule. Two of those three had answered correctly
-and were thrown away by Ronin because the verdicts carried no rule id. The
+and were thrown away by Yewo because the verdicts carried no rule id. The
 corpus found that, and `judge/rules.by_statement` fixes it.

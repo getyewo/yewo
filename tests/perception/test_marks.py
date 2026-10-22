@@ -7,7 +7,7 @@ class MarkTests(unittest.TestCase):
     """The number drawn on the screenshot and the number in the prompt must agree."""
 
     def _el(self, name, text, box):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
 
         return GUIElement(
             element=name,
@@ -27,7 +27,7 @@ class MarkTests(unittest.TestCase):
         ]
 
     def test_numbers_run_in_reading_order(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         numbered = [(m.index, m.element.text) for m in build(self._screen())]
 
@@ -35,7 +35,7 @@ class MarkTests(unittest.TestCase):
         self.assertEqual(numbered[-1][1], "Continue")
 
     def test_repeat_detections_get_one_number(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         doubled = self._screen() + [
             self._el("Text", "Credit / Debit Card", (381, 661, 501, 701))
@@ -45,7 +45,7 @@ class MarkTests(unittest.TestCase):
 
     def test_the_offered_list_carries_no_coordinates(self):
         """A coordinate here is one the model can echo back as if it saw it."""
-        from ronin.agent.grounding.marks import build, describe
+        from yewo.agent.grounding.marks import build, describe
 
         listing = describe(build(self._screen()), height=2400)
 
@@ -55,7 +55,7 @@ class MarkTests(unittest.TestCase):
 
     def test_the_detected_text_is_never_listed(self):
         """The model is looking at the screen those words are printed on."""
-        from ronin.agent.grounding.marks import build, describe
+        from yewo.agent.grounding.marks import build, describe
 
         listing = describe(build(self._screen()), height=2400)
 
@@ -64,7 +64,7 @@ class MarkTests(unittest.TestCase):
 
     def test_every_mark_is_listed(self):
         """The planner may answer only with a number from this list."""
-        from ronin.agent.grounding.marks import build, describe
+        from yewo.agent.grounding.marks import build, describe
 
         marks = build(self._screen())
         listing = describe(marks, height=2400)
@@ -73,7 +73,7 @@ class MarkTests(unittest.TestCase):
             self.assertIn(f"{mark.index} |", listing)
 
     def test_a_number_resolves_to_its_element(self):
-        from ronin.agent.grounding.marks import build, find
+        from yewo.agent.grounding.marks import build, find
 
         marks = build(self._screen())
         continue_mark = next(m for m in marks if m.element.text == "Continue")
@@ -82,7 +82,7 @@ class MarkTests(unittest.TestCase):
         self.assertIsNone(find(marks, 99))
 
     def test_marks_mode_never_offers_coordinates_to_the_model(self):
-        from ronin.agent.plan.planner import GROUNDING_MARKS, DevicePlanner
+        from yewo.agent.plan.planner import GROUNDING_MARKS, DevicePlanner
 
         planner = DevicePlanner.__new__(DevicePlanner)
         planner.grounding = GROUNDING_MARKS
@@ -103,13 +103,13 @@ class MarkLegibilityTests(unittest.TestCase):
 
     def test_the_font_ships_with_the_package(self):
         """A system font path differs per platform, and containers carry none."""
-        from ronin.agent.grounding.marks import FONT_PATH
+        from yewo.agent.grounding.marks import FONT_PATH
 
         self.assertTrue(FONT_PATH.is_file(), f"{FONT_PATH} is not in the package")
 
     def test_the_badge_font_scales_with_the_screenshot(self):
         """A bitmap face ignores the size and leaves the numbers illegible."""
-        from ronin.agent.grounding.marks import _font
+        from yewo.agent.grounding.marks import _font
 
         small, large = _font(800), _font(2400)
 
@@ -121,7 +121,7 @@ class MarkLegibilityTests(unittest.TestCase):
         """A glyph the face lacks draws as an empty box, which names nothing."""
         from PIL import Image, ImageDraw
 
-        from ronin.agent.grounding.marks import _font
+        from yewo.agent.grounding.marks import _font
 
         font = _font(2400)
         draw = ImageDraw.Draw(Image.new("RGB", (10, 10)))
@@ -135,7 +135,7 @@ class KeyboardMarkTests(unittest.TestCase):
     """An open keyboard is most of the screen, and numbering it buries the app."""
 
     def _el(self, text, y):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
 
         return GUIElement(
             element="Text",
@@ -154,8 +154,8 @@ class KeyboardMarkTests(unittest.TestCase):
         ]
 
     def test_keys_are_not_numbered_while_the_keyboard_is_open(self):
-        from ronin.agent.grounding.marks import build
-        from ronin.agent.perception.keyboard import without_keyboard_keys
+        from yewo.agent.grounding.marks import build
+        from yewo.agent.perception.keyboard import without_keyboard_keys
 
         kept = without_keyboard_keys(self._screen(), keyboard_open=True, screen_height=2400)
         texts = [m.element.text for m in build(kept)]
@@ -163,15 +163,15 @@ class KeyboardMarkTests(unittest.TestCase):
         self.assertEqual(texts, ["Email Address", "Login"])
 
     def test_everything_is_numbered_when_the_keyboard_is_closed(self):
-        from ronin.agent.grounding.marks import build
-        from ronin.agent.perception.keyboard import without_keyboard_keys
+        from yewo.agent.grounding.marks import build
+        from yewo.agent.perception.keyboard import without_keyboard_keys
 
         kept = without_keyboard_keys(self._screen(), keyboard_open=False, screen_height=2400)
 
         self.assertEqual(len(build(kept)), len(self._screen()))
 
     def test_a_long_label_low_on_screen_is_not_mistaken_for_a_key(self):
-        from ronin.agent.perception.keyboard import without_keyboard_keys
+        from yewo.agent.perception.keyboard import without_keyboard_keys
 
         elements = [self._el("Place Order", 2200)]
 
@@ -184,18 +184,18 @@ class UnresolvedMarkTests(unittest.TestCase):
     """A number naming nothing must be reportable, not fatal."""
 
     def _action(self):
-        from ronin.agent.actuation.actions import TapMarkAction
+        from yewo.agent.actuation.actions import TapMarkAction
 
         return TapMarkAction(mark=47, reason="continue")
 
     def test_an_unresolved_mark_can_be_described(self):
-        from ronin.agent.step import narration
+        from yewo.agent.step import narration
 
         self.assertIn("element 47", narration.describe(self._action()))
 
     def test_an_unresolved_mark_can_be_hashed_for_loop_detection(self):
-        from ronin.agent.actuation.actions import TapMarkAction
-        from ronin.agent.memory.loop_detector import RollingLoopDetector
+        from yewo.agent.actuation.actions import TapMarkAction
+        from yewo.agent.memory.loop_detector import RollingLoopDetector
 
         same = RollingLoopDetector.hash_action(self._action())
         other = RollingLoopDetector.hash_action(TapMarkAction(mark=48, reason="continue"))
@@ -204,9 +204,9 @@ class UnresolvedMarkTests(unittest.TestCase):
         self.assertNotEqual(same, other)
 
     def test_a_not_listed_action_can_be_described_and_hashed(self):
-        from ronin.agent.step import narration
-        from ronin.agent.actuation.actions import TargetNotListedAction
-        from ronin.agent.memory.loop_detector import RollingLoopDetector
+        from yewo.agent.step import narration
+        from yewo.agent.actuation.actions import TargetNotListedAction
+        from yewo.agent.memory.loop_detector import RollingLoopDetector
 
         action = TargetNotListedAction(description="blue button", reason="r")
 
@@ -218,7 +218,7 @@ class NestCollapseTests(unittest.TestCase):
     """A field is a container holding an icon and a value — one control, not three."""
 
     def _el(self, kind, text, box):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
 
         return GUIElement(
             element=kind,
@@ -238,14 +238,14 @@ class NestCollapseTests(unittest.TestCase):
         ]
 
     def test_a_field_becomes_one_mark(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         marks = build(self._field(), screen_area=1080 * 2400)
 
         self.assertEqual(len(marks), 1)
 
     def test_the_collapsed_mark_keeps_the_name(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         self.assertEqual(
             build(self._field(), screen_area=1080 * 2400)[0].element.text,
@@ -253,14 +253,14 @@ class NestCollapseTests(unittest.TestCase):
         )
 
     def test_the_collapsed_mark_is_touched_where_its_label_is(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         mark = build(self._field(), screen_area=1080 * 2400)[0]
 
         self.assertEqual(mark.center, (430, 885))
 
     def test_a_layout_region_keeps_its_controls_separate(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         page = [self._el("View", "", (0, 0, 1080, 2400)), *self._field()]
 
@@ -279,7 +279,7 @@ class ListRowTests(NestCollapseTests):
         ]
 
     def test_a_card_keeps_its_button_reachable(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         texts = [m.element.text for m in build(self._card(), screen_area=1080 * 2400)]
 
@@ -287,12 +287,12 @@ class ListRowTests(NestCollapseTests):
         self.assertIn("Burger Palace", texts)
 
     def test_a_single_value_wrapper_still_collapses(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         self.assertEqual(len(build(self._field(), screen_area=1080 * 2400)), 1)
 
     def test_a_container_with_its_own_label_is_left_alone(self):
-        from ronin.agent.grounding.marks import build
+        from yewo.agent.grounding.marks import build
 
         labelled = [
             self._el("View", "Total", (40, 600, 1040, 700)),
@@ -304,7 +304,7 @@ class KeyboardBandTests(unittest.TestCase):
     """The strip with no numbers has to say why it has no numbers."""
 
     def _key(self, text, y):
-        from ronin.agent.perception.elements import BoundingBox, GUIElement
+        from yewo.agent.perception.elements import BoundingBox, GUIElement
 
         return GUIElement(
             element="Text",
@@ -315,20 +315,20 @@ class KeyboardBandTests(unittest.TestCase):
         )
 
     def test_the_band_spans_the_keys(self):
-        from ronin.agent.perception.keyboard import keyboard_band
+        from yewo.agent.perception.keyboard import keyboard_band
 
         band = keyboard_band([self._key("q", 1800), self._key("m", 2200)], 1080)
 
         self.assertEqual(band, (0, 1800, 1080, 2240))
 
     def test_there_is_no_band_without_a_keyboard(self):
-        from ronin.agent.perception.keyboard import keyboard_band
+        from yewo.agent.perception.keyboard import keyboard_band
 
         self.assertIsNone(keyboard_band([], 1080))
 
     def test_a_wide_key_inside_the_band_is_absorbed(self):
         """"?123" and "space" are too long for the label rule but sit among the keys."""
-        from ronin.agent.perception.keyboard import split_keyboard
+        from yewo.agent.perception.keyboard import split_keyboard
 
         elements = [
             self._key("q", 1700),
@@ -342,7 +342,7 @@ class KeyboardBandTests(unittest.TestCase):
         self.assertEqual(len(keys), 3)
 
     def test_an_app_control_above_the_keyboard_survives(self):
-        from ronin.agent.perception.keyboard import split_keyboard
+        from yewo.agent.perception.keyboard import split_keyboard
 
         elements = [self._key("Place Order", 1400), self._key("q", 1700), self._key("m", 2200)]
 

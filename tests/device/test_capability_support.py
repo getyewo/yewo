@@ -11,13 +11,13 @@ from fakes import walk
 from types import SimpleNamespace
 from unittest import mock
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     AppStateCapability,
     CapabilityKind,
     InterruptCapability,
     NetworkCapability,
 )
-from ronin.agent.device.platform import Platform
+from yewo.agent.device.platform import Platform
 
 SERIAL = "emulator-5554"
 
@@ -26,7 +26,7 @@ class PreflightTests(unittest.TestCase):
     """What a scenario declares, read against the target in front of it."""
 
     def _case(self, *required, outcomes=("a banner appears",), steps=None):
-        from ronin.testing.models import GeneratedTestCase
+        from yewo.testing.models import GeneratedTestCase
 
         return GeneratedTestCase(
             test_id="TS_1",
@@ -46,17 +46,17 @@ class PreflightTests(unittest.TestCase):
         A declared kind is the fallback. The step is where the capability
         itself lives, and the variant with it.
         """
-        from ronin.testing.steps import CapabilityStep
+        from yewo.testing.steps import CapabilityStep
 
         return self._case(steps=[CapabilityStep(capability=capability)])
 
     def _target(self, platform=Platform.ANDROID, **kwargs):
-        from ronin.testing.judge.capabilities import Target
+        from yewo.testing.judge.capabilities import Target
 
         return Target(platform=platform, **{"emulator": True, **kwargs})
 
     def _reason(self, case, target):
-        from ronin.testing.judge.capabilities import unsupported_reason
+        from yewo.testing.judge.capabilities import unsupported_reason
 
         return unsupported_reason(case, target)
 
@@ -102,7 +102,7 @@ class PreflightTests(unittest.TestCase):
 
     def test_a_missing_tool_skips_the_scenario(self):
         """Only switching the screen reader on needs it installed."""
-        from ronin.agent.actuation.actions import AccessibilityCapability
+        from yewo.agent.actuation.actions import AccessibilityCapability
 
         reason = self._reason(
             self._asking_for(AccessibilityCapability(enabled=True)),
@@ -113,7 +113,7 @@ class PreflightTests(unittest.TestCase):
 
     def test_switching_a_missing_tool_off_asks_nothing_of_it(self):
         """A device without the screen reader already has it off."""
-        from ronin.agent.actuation.actions import AccessibilityCapability
+        from yewo.agent.actuation.actions import AccessibilityCapability
 
         self.assertIsNone(
             self._reason(
@@ -166,7 +166,7 @@ class PreflightTests(unittest.TestCase):
 
     def test_a_capability_with_no_row_for_the_platform_is_refused(self):
         """An absent row is how two implemented iOS capabilities were skipped."""
-        from ronin.testing.judge.capabilities import (
+        from yewo.testing.judge.capabilities import (
             CAPABILITY_SUPPORT,
             Support,
             unsupported_capability,
@@ -193,7 +193,7 @@ class PreflightTests(unittest.TestCase):
 
     def test_a_caller_with_no_target_checks_only_the_prose(self):
         """The default cannot refuse a scenario it knows nothing about."""
-        from ronin.testing.judge.capabilities import unsupported_reason
+        from yewo.testing.judge.capabilities import unsupported_reason
 
         self.assertIsNone(unsupported_reason(self._case(CapabilityKind.NETWORK)))
 
@@ -204,7 +204,7 @@ class PreflightTests(unittest.TestCase):
         rather than inherit a refusal from a line nobody wrote. Two iOS
         capabilities were implemented and refused this way.
         """
-        from ronin.testing.judge.capabilities import CAPABILITY_SUPPORT
+        from yewo.testing.judge.capabilities import CAPABILITY_SUPPORT
 
         self.assertEqual(set(CAPABILITY_SUPPORT), set(CapabilityKind))
         for kind in CapabilityKind:
@@ -220,16 +220,16 @@ class TargetReadingTests(unittest.TestCase):
             platform=Platform.ANDROID, serial=SERIAL, os_version="14"
         )
         adb = mock.patch(
-            "ronin.agent.device.adb_control.AdbControl.avd_name", return_value=avd
+            "yewo.agent.device.adb_control.AdbControl.avd_name", return_value=avd
         )
         installed = mock.patch(
-            "ronin.agent.device.adb_control.AdbControl.installed_packages",
+            "yewo.agent.device.adb_control.AdbControl.installed_packages",
             return_value=packages,
         )
         sdk = mock.patch(
-            "ronin.agent.device.adb_control.AdbControl.ask", return_value=api
+            "yewo.agent.device.adb_control.AdbControl.ask", return_value=api
         )
-        from ronin.testing.judge.capabilities import target_of
+        from yewo.testing.judge.capabilities import target_of
 
         with adb, installed, sdk:
             return target_of(device)
@@ -248,7 +248,7 @@ class TargetReadingTests(unittest.TestCase):
         self.assertIsNone(self._read(avd="Pixel_8", api="null").release)
 
     def test_a_target_with_no_serial_reads_nothing_off_it(self):
-        from ronin.testing.judge.capabilities import target_of
+        from yewo.testing.judge.capabilities import target_of
 
         target = target_of(
             SimpleNamespace(platform=Platform.ANDROID, serial="", os_version=None)
@@ -270,10 +270,10 @@ class PhysicalDeviceTests(unittest.TestCase):
     SIMULATED = "8B59D40E-33B7-40EC-AB5D-50FFA0AB306E"
 
     def _target(self, listed, os_version="18.2"):
-        from ronin.testing.judge.capabilities import target_of
+        from yewo.testing.judge.capabilities import target_of
 
         with mock.patch(
-            "ronin.agent.device.simctl_control.SimctlControl.ask",
+            "yewo.agent.device.simctl_control.SimctlControl.ask",
             return_value=listed,
         ):
             return target_of(
@@ -285,7 +285,7 @@ class PhysicalDeviceTests(unittest.TestCase):
             )
 
     def _allowed(self, target):
-        from ronin.testing.judge.capabilities import unsupported_capability
+        from yewo.testing.judge.capabilities import unsupported_capability
 
         return {
             kind.value
@@ -321,7 +321,7 @@ class PhysicalDeviceTests(unittest.TestCase):
 
     def test_the_release_a_capability_needs_is_read_off_the_driver(self):
         """VoiceOver arrived in iOS 27, and this target reports 18.2."""
-        from ronin.testing.judge.capabilities import unsupported_capability
+        from yewo.testing.judge.capabilities import unsupported_capability
 
         refusal = unsupported_capability(
             CapabilityKind.ACCESSIBILITY, self._target("  (none)")
@@ -332,7 +332,7 @@ class PhysicalDeviceTests(unittest.TestCase):
 
     def test_a_release_nothing_reported_refuses_nothing(self):
         """The same rule as an unread API level, for the same reason."""
-        from ronin.testing.judge.capabilities import unsupported_capability
+        from yewo.testing.judge.capabilities import unsupported_capability
 
         self.assertIsNone(
             unsupported_capability(
@@ -353,7 +353,7 @@ class PhysicalDeviceTests(unittest.TestCase):
         the app is a driver call. Both are `app_state`, and only one of them
         works on a phone.
         """
-        from ronin.testing.judge.capabilities import unsupported_for
+        from yewo.testing.judge.capabilities import unsupported_for
 
         target = self._target("  (none)")
 
@@ -363,7 +363,7 @@ class PhysicalDeviceTests(unittest.TestCase):
         self.assertIn("emulator", refusal)
 
     def test_a_call_no_ios_target_can_place_is_refused_on_either_kind(self):
-        from ronin.testing.judge.capabilities import unsupported_for
+        from yewo.testing.judge.capabilities import unsupported_for
 
         for listed in ("  (none)", f"  iPhone ({self.PHYSICAL}) (Booted)"):
             with self.subTest(listed=listed):
@@ -375,7 +375,7 @@ class PhysicalDeviceTests(unittest.TestCase):
 
     def test_a_low_memory_warning_is_allowed_on_either_kind(self):
         """The driver sends one to a phone and simctl posts one to a simulator."""
-        from ronin.testing.judge.capabilities import unsupported_for
+        from yewo.testing.judge.capabilities import unsupported_for
 
         for listed in ("  (none)", f"  iPhone ({self.PHYSICAL}) (Booted)"):
             with self.subTest(listed=listed):
@@ -387,7 +387,7 @@ class PhysicalDeviceTests(unittest.TestCase):
 
     def test_a_simctl_that_will_not_answer_refuses_nothing(self):
         """An unestablished kind refuses nothing, as an unread release does."""
-        from ronin.testing.judge.capabilities import unsupported_capability
+        from yewo.testing.judge.capabilities import unsupported_capability
 
         target = self._target(None)
 
@@ -406,7 +406,7 @@ class DeclaredCapabilityTests(unittest.TestCase):
     """
 
     def _receipt(self, capability, observed, requested="on"):
-        from ronin.agent.device.receipts import Receipt
+        from yewo.agent.device.receipts import Receipt
 
         return Receipt(
             capability=capability,
@@ -417,7 +417,7 @@ class DeclaredCapabilityTests(unittest.TestCase):
         )
 
     def _missing(self, required, receipts):
-        from ronin.testing.judge.capabilities import unconfirmed_capabilities
+        from yewo.testing.judge.capabilities import unconfirmed_capabilities
 
         return unconfirmed_capabilities(required, receipts)
 
@@ -456,8 +456,8 @@ class DeclaredCapabilityGateTests(unittest.TestCase):
     """The gate refuses a scenario whose declared state was never confirmed."""
 
     def _status(self, required, receipts):
-        from ronin.agent.device.receipts import Receipt
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.agent.device.receipts import Receipt
+        from yewo.testing.qa_agent import QAAgent
 
         made = [
             Receipt(

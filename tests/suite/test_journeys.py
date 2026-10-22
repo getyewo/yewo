@@ -8,7 +8,7 @@ class JourneyEnvTests(unittest.TestCase):
     """A journey declares its values and says which are secret."""
 
     def _journey(self, data):
-        from ronin.testing.suite import _journey
+        from yewo.testing.suite import _journey
 
         return _journey(data, {}, 1)
 
@@ -42,15 +42,15 @@ class JourneyEnvTests(unittest.TestCase):
     def test_values_can_come_from_the_environment(self):
         import os
 
-        from ronin.testing.journey_env import resolve
+        from yewo.testing.journey_env import resolve
 
-        os.environ["RONIN_ENV_TEST"] = "from-the-shell"
+        os.environ["YEWO_ENV_TEST"] = "from-the-shell"
         try:
             _, secrets, _ = resolve(
-                {"env": {"password": "${RONIN_ENV_TEST}"}, "secrets": ["password"]}
+                {"env": {"password": "${YEWO_ENV_TEST}"}, "secrets": ["password"]}
             )
         finally:
-            del os.environ["RONIN_ENV_TEST"]
+            del os.environ["YEWO_ENV_TEST"]
 
         self.assertEqual(secrets, {"password": "from-the-shell"})
 
@@ -78,7 +78,7 @@ class InlineSecretTests(unittest.TestCase):
     """A value can say it is secret where it is declared."""
 
     def _resolve(self, data):
-        from ronin.testing.journey_env import resolve
+        from yewo.testing.journey_env import resolve
 
         return resolve(data)
 
@@ -132,11 +132,11 @@ class MissingEnvTests(unittest.TestCase):
     def test_an_unset_variable_fails_the_journey(self):
         import os
 
-        from ronin.testing.journey_env import resolve
+        from yewo.testing.journey_env import resolve
 
-        os.environ.pop("RONIN_DEFINITELY_UNSET", None)
+        os.environ.pop("YEWO_DEFINITELY_UNSET", None)
 
         with self.assertRaises(ValueError) as caught:
-            resolve({"env": {"password": "${RONIN_DEFINITELY_UNSET}"}})
+            resolve({"env": {"password": "${YEWO_DEFINITELY_UNSET}"}})
 
-        self.assertIn("RONIN_DEFINITELY_UNSET", str(caught.exception))
+        self.assertIn("YEWO_DEFINITELY_UNSET", str(caught.exception))

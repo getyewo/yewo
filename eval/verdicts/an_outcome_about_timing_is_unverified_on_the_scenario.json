@@ -1,6 +1,6 @@
 {
   "id": "an-outcome-about-timing-is-unverified-on-the-scenario",
-  "why": "Ronin measures no timing. The outcome is refused as unprovable rather than reported as evidence the run failed to gather.",
+  "why": "Yewo measures no timing. The outcome is refused as unprovable rather than reported as evidence the run failed to gather.",
   "run": {
     "status": "goal_reached"
   },

@@ -9,7 +9,7 @@ class AuditorOwnershipTests(unittest.TestCase):
 
     def test_the_planner_is_not_asked_for_verdicts(self):
         """A planner grading the work it just chose is not a second opinion."""
-        from ronin.testing.qa_planner import QAStepResponse
+        from yewo.testing.qa_planner import QAStepResponse
 
         fields = QAStepResponse.model_fields
 
@@ -17,7 +17,7 @@ class AuditorOwnershipTests(unittest.TestCase):
         self.assertNotIn("detected_issues", fields)
 
     def test_the_auditor_is_asked_for_them(self):
-        from ronin.testing.judge.qa_auditor import Assessment
+        from yewo.testing.judge.qa_auditor import Assessment
 
         fields = Assessment.model_fields
 
@@ -26,8 +26,8 @@ class AuditorOwnershipTests(unittest.TestCase):
 
     def test_completion_stays_with_the_planner(self):
         """Only the planner is told the goal, so only it can say the goal is met."""
-        from ronin.testing.judge.qa_auditor import Assessment
-        from ronin.testing.qa_planner import QAStepResponse
+        from yewo.testing.judge.qa_auditor import Assessment
+        from yewo.testing.qa_planner import QAStepResponse
 
         self.assertIn("goal_satisfied", QAStepResponse.model_fields)
         self.assertNotIn("goal_satisfied", Assessment.model_fields)
@@ -35,8 +35,8 @@ class AuditorOwnershipTests(unittest.TestCase):
 
     def test_feasibility_stays_with_the_planner(self):
         """Whether the agent can proceed is not a statement about the app."""
-        from ronin.testing.judge.qa_auditor import Assessment
-        from ronin.testing.qa_planner import QAStepResponse
+        from yewo.testing.judge.qa_auditor import Assessment
+        from yewo.testing.qa_planner import QAStepResponse
 
         self.assertIn("is_scenario_feasible", QAStepResponse.model_fields)
         self.assertNotIn("is_scenario_feasible", Assessment.model_fields)
@@ -46,8 +46,8 @@ class CrashRankingTests(unittest.TestCase):
     """A crash is something the app did. The rest describe the run."""
 
     def _verdict_for(self, **overrides):
-        from ronin.testing.models import QAIssue
-        from ronin.testing.judge.verdicts import _terminal_outcome
+        from yewo.testing.models import QAIssue
+        from yewo.testing.judge.verdicts import _terminal_outcome
 
         values = {
             "run_result": SimpleNamespace(status="hook_stop", failure_reason=None),
@@ -88,7 +88,7 @@ class DurableOutcomeEvidenceTests(unittest.TestCase):
     """
 
     def _verification(self, rule_id, status, applicable=True):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         return RuleVerification(
             rule="The address field accepts the long input",
@@ -99,7 +99,7 @@ class DurableOutcomeEvidenceTests(unittest.TestCase):
         )
 
     def _missing(self, verifications):
-        from ronin.testing.judge.verdicts import _missing_required_ids
+        from yewo.testing.judge.verdicts import _missing_required_ids
 
         return _missing_required_ids(
             verifications, ["The address field accepts the long input"], []
@@ -154,7 +154,7 @@ class ExposureEvidenceTests(unittest.TestCase):
     """
 
     def _issue(self, kind="sensitive_data_exposure", screen="Checkout Details"):
-        from ronin.testing.models import QAIssue
+        from yewo.testing.models import QAIssue
 
         issue = QAIssue(
             issue_type=kind,
@@ -165,14 +165,14 @@ class ExposureEvidenceTests(unittest.TestCase):
         return issue
 
     def _finding(self, rendering, screen="Checkout Details"):
-        from ronin.testing.models import SensitiveFinding
+        from yewo.testing.models import SensitiveFinding
 
         finding = SensitiveFinding(field="CVV", rendering=rendering)
         finding.screen_name = screen
         return finding
 
     def _verdict_for(self, issues, findings):
-        from ronin.testing.judge.verdicts import _terminal_outcome
+        from yewo.testing.judge.verdicts import _terminal_outcome
 
         return _terminal_outcome(
             run_result=SimpleNamespace(status="goal_reached", failure_reason=None),
@@ -224,7 +224,7 @@ class RenderingTests(unittest.TestCase):
     """Only one of the four readings is a leak."""
 
     def test_which_readings_are_exposures(self):
-        from ronin.testing.models import Rendering, SensitiveFinding
+        from yewo.testing.models import Rendering, SensitiveFinding
 
         leaks = {
             rendering: SensitiveFinding(field="CVV", rendering=rendering).is_exposure()

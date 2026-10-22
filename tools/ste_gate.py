@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce controlled language in the prose Ronin ships, with no dependencies.
+"""Enforce controlled language in the prose Yewo ships, with no dependencies.
 
 The agent-development skill asks for short active sentences, one instruction
 per sentence, and one name for one thing. Those rules are checked by the
@@ -34,7 +34,7 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 BASELINE_PATH = Path(__file__).resolve().with_name("ste-baseline.toml")
 
-LINTER_ENV = "RONIN_STE_LINT"
+LINTER_ENV = "YEWO_STE_LINT"
 SKILL_LINTER = Path.home() / ".claude/skills/asd-ste100/scripts/ste-lint.py"
 VENDORED_LINTER = Path(__file__).resolve().with_name("ste_lint.py")
 
@@ -49,7 +49,7 @@ def _find_linter() -> Path | None:
     the same rules. A gate whose rules depend on what is installed on the
     machine reports a different answer per machine, which is not a gate.
 
-    `RONIN_STE_LINT` overrides it. That is how a rule is tried before the
+    `YEWO_STE_LINT` overrides it. That is how a rule is tried before the
     copy here is updated, and the override is deliberate rather than
     whatever happened to be installed.
     """
@@ -104,14 +104,14 @@ def _described(node: ast.AST) -> list[str]:
     return found
 
 
-# A line of a file Ronin writes, rather than a line of English. A template
+# A line of a file Yewo writes, rather than a line of English. A template
 # for a .env or for a throwaway script is a long string too, and its own
 # comments are not text this gate has anything to say about.
 CODE_LINE = re.compile(r"^\s*(#|//|import\s|from\s|\w+\s*=[^=])")
 
 
 def _is_prose(value: str) -> bool:
-    """Whether a string is English rather than a file Ronin writes out."""
+    """Whether a string is English rather than a file Yewo writes out."""
     if " " not in value or len(value) < SENTENCE_LENGTH:
         return False
     return not any(CODE_LINE.match(line) for line in value.splitlines())
@@ -159,7 +159,7 @@ def _refused(node: ast.AST) -> list[str]:
     """Every sentence the exception of a `raise` was built with.
 
     A refusal is read twice: once by whoever reads the report, and once by
-    whoever is deciding whether Ronin was right to refuse.
+    whoever is deciding whether Yewo was right to refuse.
     """
     if not isinstance(node, ast.Raise) or not isinstance(node.exc, ast.Call):
         return []
@@ -341,7 +341,7 @@ def _python_files(targets: list[Path]) -> list[Path]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("paths", nargs="*", default=["src/ronin"])
+    parser.add_argument("paths", nargs="*", default=["src/yewo"])
     args = parser.parse_args()
 
     linter = _find_linter()

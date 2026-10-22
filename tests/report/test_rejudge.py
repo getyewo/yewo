@@ -7,8 +7,8 @@ from tempfile import TemporaryDirectory
 
 from fakes import walk
 
-from ronin.errors import UsageError
-from ronin.testing import rejudge
+from yewo.errors import UsageError
+from yewo.testing import rejudge
 
 
 def _written(directory: Path, scenarios: list, schema: int = 2) -> Path:
@@ -182,15 +182,15 @@ class WhatTheReportCarriesTests(unittest.TestCase):
     def _agent(self):
         from types import SimpleNamespace
 
-        from ronin.testing.qa_agent import QAAgent
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.testing.qa_agent import QAAgent
+        from yewo.utils.secrets import SecretScrubber
 
         agent = QAAgent.__new__(QAAgent)
         agent._device_agent = SimpleNamespace(scrubber=SecretScrubber())
         return agent
 
     def _case(self, outcomes=("Order is confirmed",), capabilities=()):
-        from ronin.testing.models import ExpectedOutcome, GeneratedTestCase
+        from yewo.testing.models import ExpectedOutcome, GeneratedTestCase
 
         return GeneratedTestCase(
             test_id="TS_001",
@@ -205,8 +205,8 @@ class WhatTheReportCarriesTests(unittest.TestCase):
         )
 
     def _assessment(self, findings=(), issues=()):
-        from ronin.testing.judge.qa_auditor import Assessment
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.judge.qa_auditor import Assessment
+        from yewo.testing.models import RuleVerification
 
         return Assessment(
             screen_name="Payment",
@@ -221,8 +221,8 @@ class WhatTheReportCarriesTests(unittest.TestCase):
         )
 
     def _result(self, status="goal_reached", receipts=()):
-        from ronin.agent.memory.history import AgentHistory
-        from ronin.agent.run.outcomes import DeviceRunResult
+        from yewo.agent.memory.history import AgentHistory
+        from yewo.agent.run.outcomes import DeviceRunResult
 
         return DeviceRunResult(
             status=status, steps_executed=2, failure_reason=None,
@@ -264,7 +264,7 @@ class WhatTheReportCarriesTests(unittest.TestCase):
         The findings were collected and never handed to the judge, so this
         passed on the fixtures and failed on every real screen.
         """
-        from ronin.testing.models import QAIssue, Rendering, SensitiveFinding
+        from yewo.testing.models import QAIssue, Rendering, SensitiveFinding
 
         report = self._reported(
             assessment=self._assessment(
@@ -280,8 +280,8 @@ class WhatTheReportCarriesTests(unittest.TestCase):
         self.assertEqual(len(report.verdict_inputs.sensitive_findings), 1)
 
     def test_a_declared_capability_and_its_receipt_are_both_carried(self):
-        from ronin.agent.actuation.actions import CapabilityKind
-        from ronin.agent.device.receipts import Receipt
+        from yewo.agent.actuation.actions import CapabilityKind
+        from yewo.agent.device.receipts import Receipt
 
         report = self._reported(
             case=self._case(capabilities=[CapabilityKind.NETWORK]),

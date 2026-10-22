@@ -1,4 +1,4 @@
-"""`ronin.lock`: what it holds, what it refuses to hold, and when it is stale.
+"""`yewo.lock`: what it holds, what it refuses to hold, and when it is stale.
 
 A cell key names a question. The lock names the test that answered it. These
 cases hold the two apart, because every comparison between two runs depends on
@@ -14,13 +14,13 @@ from unittest.mock import Mock
 
 from fakes import walk
 
-from ronin.errors import UsageError
-from ronin.testing import lock as locking_file
-from ronin.testing.generator import ScenarioGenerator
-from ronin.testing.lock import Lock, LockEntry, contract_sha256
-from ronin.testing.models import ScenarioDraft, UserJourney
-from ronin.testing.steps import ActionStep, EnterStep
-from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+from yewo.errors import UsageError
+from yewo.testing import lock as locking_file
+from yewo.testing.generator import ScenarioGenerator
+from yewo.testing.lock import Lock, LockEntry, contract_sha256
+from yewo.testing.models import ScenarioDraft, UserJourney
+from yewo.testing.steps import ActionStep, EnterStep
+from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
 HAPPY = CoverageCell(Category.FUNCTIONAL, ScenarioType.HAPPY_PATH, Priority.P0)
 NEGATIVE = CoverageCell(Category.SECURITY, ScenarioType.NEGATIVE, Priority.P0)
@@ -99,7 +99,7 @@ class EntryTests(unittest.TestCase):
     """What one entry carries, and what it rebuilds."""
 
     def _entry(self, **extra):
-        from ronin.testing.models import GeneratedTestCase
+        from yewo.testing.models import GeneratedTestCase
 
         scenario = GeneratedTestCase.of(NEGATIVE, draft(**extra))
         return scenario, LockEntry.of(scenario, journey(), "flow", "digest")
@@ -156,13 +156,13 @@ class EntryTests(unittest.TestCase):
 
 class FileTests(unittest.TestCase):
     def test_a_lock_round_trips_through_its_file(self):
-        from ronin.testing.models import GeneratedTestCase
+        from yewo.testing.models import GeneratedTestCase
 
         scenario = GeneratedTestCase.of(HAPPY, draft())
         original = Lock(entries=[LockEntry.of(scenario, journey(), "", "d")])
 
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             locking_file.write(path, original)
             read_back = locking_file.read(path)
 
@@ -171,12 +171,12 @@ class FileTests(unittest.TestCase):
 
     def test_an_absent_lock_is_not_an_error(self):
         with tempfile.TemporaryDirectory() as directory:
-            self.assertIsNone(locking_file.read(Path(directory) / "ronin.lock"))
+            self.assertIsNone(locking_file.read(Path(directory) / "yewo.lock"))
 
     def test_an_unreadable_lock_is_never_read_as_an_absent_one(self):
         """Reading it as absent would silently regenerate the tests it held."""
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             path.write_text("{not json")
 
             with self.assertRaises(UsageError):
@@ -184,17 +184,17 @@ class FileTests(unittest.TestCase):
 
     def test_a_lock_from_another_schema_is_refused_by_name(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             path.write_text(json.dumps({"schema_version": 99, "entries": []}))
 
             with self.assertRaises(UsageError) as raised:
                 locking_file.read(path)
 
-        self.assertIn("ronin lock", str(raised.exception))
+        self.assertIn("yewo lock", str(raised.exception))
 
     def test_nothing_is_left_behind_when_a_write_succeeds(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             locking_file.write(path, Lock())
 
-            self.assertEqual([p.name for p in Path(directory).iterdir()], ["ronin.lock"])
+            self.assertEqual([p.name for p in Path(directory).iterdir()], ["yewo.lock"])

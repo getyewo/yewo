@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 from selenium.common.exceptions import WebDriverException
 
-from ronin.agent.device.platform import Platform
-from ronin.agent.device.recording import (
+from yewo.agent.device.platform import Platform
+from yewo.agent.device.recording import (
     MEDIA_PROJECTION_RUNNING,
     RECORDING_TIME_LIMIT,
     START_MEDIA_PROJECTION,
@@ -23,7 +23,7 @@ PAYLOAD = b"\x00\x01video bytes"
 
 def media_projection():
     """Opts a test into the recorder that is not the default."""
-    return patch("ronin.agent.device.recording.USE_MEDIA_PROJECTION", True)
+    return patch("yewo.agent.device.recording.USE_MEDIA_PROJECTION", True)
 
 
 class FakeDriver:
@@ -95,11 +95,11 @@ class RecordingTest(unittest.TestCase):
 
     def setUp(self):
         listing = patch(
-            "ronin.agent.device.recording.DeviceFiles.list_directory", return_value=[]
+            "yewo.agent.device.recording.DeviceFiles.list_directory", return_value=[]
         )
         self.listing = listing.start()
         self.addCleanup(listing.stop)
-        flush = patch("ronin.agent.device.recording.time.sleep")
+        flush = patch("yewo.agent.device.recording.time.sleep")
         flush.start()
         self.addCleanup(flush.stop)
 
@@ -181,11 +181,11 @@ class StartRecordingTests(RecordingTest):
             self.assertTrue(session.is_recording)
             self.assertEqual(
                 session.device_control.driver.calls[0],
-                (START_MEDIA_PROJECTION, {"filename": "ronin_abc123.mp4"}),
+                (START_MEDIA_PROJECTION, {"filename": "yewo_abc123.mp4"}),
             )
             self.assertEqual(
                 session._remote_path,
-                "/sdcard/Android/data/io.appium.settings/files/ronin_abc123.mp4",
+                "/sdcard/Android/data/io.appium.settings/files/yewo_abc123.mp4",
             )
 
     def test_the_device_is_asked_whether_it_is_really_recording(self):
@@ -263,7 +263,7 @@ class SaveRecordingTests(RecordingTest):
     def test_the_video_is_written_where_the_session_keeps_them(self):
         with TemporaryDirectory() as directory:
             encoded = base64.b64encode(PAYLOAD).decode()
-            with patch("ronin.agent.device.recording.DeviceFiles.remove_file"):
+            with patch("yewo.agent.device.recording.DeviceFiles.remove_file"):
                 session, path = self._save(directory, stop=encoded)
 
             self.assertEqual(path, Path(directory) / "session_abc123_001.mp4")
@@ -296,13 +296,13 @@ class SaveRecordingTests(RecordingTest):
         with TemporaryDirectory() as directory:
             encoded = base64.b64encode(PAYLOAD).decode()
             with patch(
-                "ronin.agent.device.recording.DeviceFiles.remove_file"
+                "yewo.agent.device.recording.DeviceFiles.remove_file"
             ) as remove:
                 session, _ = self._save(directory, stop=encoded)
 
             remove.assert_called_once_with(
                 "emulator-5554",
-                "/sdcard/Android/data/io.appium.settings/files/ronin_abc123.mp4",
+                "/sdcard/Android/data/io.appium.settings/files/yewo_abc123.mp4",
             )
             self.assertIsNone(session._remote_path)
 
@@ -320,10 +320,10 @@ class SaveRecordingTests(RecordingTest):
 
             with (
                 patch(
-                    "ronin.agent.device.recording.DeviceFiles.pull_file",
+                    "yewo.agent.device.recording.DeviceFiles.pull_file",
                     return_value=False,
                 ),
-                patch("ronin.agent.device.recording.DeviceFiles.remove_file") as remove,
+                patch("yewo.agent.device.recording.DeviceFiles.remove_file") as remove,
             ):
                 self.assertIsNone(session.save_recording())
 
@@ -337,7 +337,7 @@ class SaveRecordingTests(RecordingTest):
             session.device_control.driver.no_media_projection = True
 
             with patch(
-                "ronin.agent.device.recording.DeviceFiles.pull_file", return_value=False
+                "yewo.agent.device.recording.DeviceFiles.pull_file", return_value=False
             ):
                 self.assertIsNone(session.save_recording())
 
@@ -355,17 +355,17 @@ class SaveRecordingTests(RecordingTest):
 
             with (
                 patch(
-                    "ronin.agent.device.recording.DeviceFiles.pull_file",
+                    "yewo.agent.device.recording.DeviceFiles.pull_file",
                     return_value=True,
                 ) as pull,
-                patch("ronin.agent.device.recording.DeviceFiles.remove_file"),
+                patch("yewo.agent.device.recording.DeviceFiles.remove_file"),
             ):
                 path = session.save_recording()
 
             self.assertEqual(path, Path(directory) / "session_abc123_001.mp4")
             pull.assert_called_once_with(
                 "emulator-5554",
-                "/sdcard/Android/data/io.appium.settings/files/ronin_abc123.mp4",
+                "/sdcard/Android/data/io.appium.settings/files/yewo_abc123.mp4",
                 str(Path(directory) / "session_abc123_001.mp4"),
             )
 
@@ -383,13 +383,13 @@ class SaveRecordingTests(RecordingTest):
 
             with (
                 patch(
-                    "ronin.agent.device.recording.DeviceFiles.stop_screenrecord"
+                    "yewo.agent.device.recording.DeviceFiles.stop_screenrecord"
                 ) as interrupt,
                 patch(
-                    "ronin.agent.device.recording.DeviceFiles.pull_file",
+                    "yewo.agent.device.recording.DeviceFiles.pull_file",
                     return_value=True,
                 ) as pull,
-                patch("ronin.agent.device.recording.DeviceFiles.remove_file"),
+                patch("yewo.agent.device.recording.DeviceFiles.remove_file"),
             ):
                 path = session.save_recording()
 
@@ -407,7 +407,7 @@ class SaveRecordingTests(RecordingTest):
             session = Session(FakeDriver(no_media_projection=True), directory)
             session.start_recording()
 
-            with patch("ronin.agent.device.recording.DeviceFiles.pull_file") as pull:
+            with patch("yewo.agent.device.recording.DeviceFiles.pull_file") as pull:
                 session.device_control.driver.stop = None
                 self.assertIsNone(session.save_recording())
 
@@ -452,7 +452,7 @@ class StaleRecordingTests(RecordingTest):
             session = Session(FakeDriver(), directory)
 
             with patch(
-                "ronin.agent.device.recording.DeviceFiles.remove_stale_recordings"
+                "yewo.agent.device.recording.DeviceFiles.remove_stale_recordings"
             ) as sweep:
                 session.discard_stale_recordings()
 
@@ -464,7 +464,7 @@ class StaleRecordingTests(RecordingTest):
             session = Session(FakeDriver(), directory, platform=Platform.IOS)
 
             with patch(
-                "ronin.agent.device.recording.DeviceFiles.remove_stale_recordings"
+                "yewo.agent.device.recording.DeviceFiles.remove_stale_recordings"
             ) as sweep:
                 session.discard_stale_recordings()
 
@@ -477,7 +477,7 @@ class RecordingPathTests(RecordingTest):
     def test_a_second_session_does_not_overwrite_the_first(self):
         """The segment that recorded the failure is the one worth keeping."""
         with TemporaryDirectory() as directory:
-            with patch("ronin.agent.device.recording.DeviceFiles.remove_file"):
+            with patch("yewo.agent.device.recording.DeviceFiles.remove_file"):
                 first = Session(
                     FakeDriver(stop=base64.b64encode(PAYLOAD).decode()), directory
                 )

@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 
 def _assessment(**overrides):
-    from ronin.testing.judge.qa_auditor import Assessment
+    from yewo.testing.judge.qa_auditor import Assessment
 
     values = {"screen_name": "Login Screen"}
     values.update(overrides)
@@ -17,7 +17,7 @@ class AuditorInputTests(unittest.TestCase):
     """What the auditor is not told is the point of it."""
 
     def _auditor(self, llm):
-        from ronin.testing.judge.qa_auditor import QAAuditor
+        from yewo.testing.judge.qa_auditor import QAAuditor
 
         return QAAuditor(llm, ["Order confirmed"], ["Card masked"])
 
@@ -60,7 +60,7 @@ class ScreenCachingTests(unittest.TestCase):
     """A screen that has not changed cannot have changed its mind."""
 
     def _auditor(self, llm):
-        from ronin.testing.judge.qa_auditor import QAAuditor
+        from yewo.testing.judge.qa_auditor import QAAuditor
 
         return QAAuditor(llm, [], [])
 
@@ -98,7 +98,7 @@ class AuditorPromptTests(unittest.TestCase):
     def _prompt(self):
         from unittest.mock import Mock
 
-        from ronin.testing.judge.qa_auditor import QAAuditor
+        from yewo.testing.judge.qa_auditor import QAAuditor
 
         llm = SimpleNamespace(generate_response=Mock(return_value=_assessment()))
         QAAuditor(llm, ["Order is confirmed"], ["Card is masked"]).audit(b"png", "s")
@@ -131,9 +131,9 @@ class AssessmentScrubbingTests(unittest.TestCase):
     """The auditor writes in its own words, which quote the journey's values."""
 
     def test_declared_secrets_are_masked_in_what_it_wrote(self):
-        from ronin.testing.judge.qa_auditor import QAAuditor
-        from ronin.testing.models import QAIssue, RuleVerification
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.testing.judge.qa_auditor import QAAuditor
+        from yewo.testing.models import QAIssue, RuleVerification
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"password": "hunter2"})
@@ -169,8 +169,8 @@ class CacheAliasingTests(unittest.TestCase):
     """Callers withdraw findings from what they are given, so give them a copy."""
 
     def _auditor(self):
-        from ronin.testing.models import QAIssue
-        from ronin.testing.judge.qa_auditor import QAAuditor
+        from yewo.testing.models import QAIssue
+        from yewo.testing.judge.qa_auditor import QAAuditor
 
         crash = QAIssue(
             issue_type="crash_screen", severity="critical", description="Blank screen"
@@ -207,7 +207,7 @@ class ScreenWatchTests(unittest.TestCase):
     """
 
     def _watch(self):
-        from ronin.testing.judge.qa_auditor import ScreenWatch
+        from yewo.testing.judge.qa_auditor import ScreenWatch
 
         looked = []
 
@@ -364,7 +364,7 @@ class ScanVocabularyTests(unittest.TestCase):
     """
 
     def _perception(self):
-        from ronin.agent.perception.blind import BlindPerception
+        from yewo.agent.perception.blind import BlindPerception
 
         return BlindPerception(SimpleNamespace())
 
@@ -390,7 +390,7 @@ class ScanVocabularyTests(unittest.TestCase):
         return image
 
     def test_every_reason_describe_mode_reports_is_one_the_trigger_knows(self):
-        from ronin.agent.perception import elements
+        from yewo.agent.perception import elements
 
         known = {
             elements.FIRST_PASS,
@@ -408,7 +408,7 @@ class ScanVocabularyTests(unittest.TestCase):
         self.assertTrue(reasons <= known, f"unknown reasons: {reasons - known}")
 
     def test_the_first_look_is_an_arrival(self):
-        from ronin.agent.perception import elements
+        from yewo.agent.perception import elements
 
         reason = self._frame(self._perception(), self._image(1))
 
@@ -416,7 +416,7 @@ class ScanVocabularyTests(unittest.TestCase):
         self.assertIn(reason, elements.ARRIVALS)
 
     def test_the_same_screen_twice_is_not_an_arrival(self):
-        from ronin.agent.perception import elements
+        from yewo.agent.perception import elements
 
         perception = self._perception()
         self._frame(perception, self._image(1))
@@ -427,7 +427,7 @@ class ScanVocabularyTests(unittest.TestCase):
         self.assertNotIn(reason, elements.ARRIVALS)
 
     def test_a_distance_past_the_threshold_is_an_arrival(self):
-        from ronin.agent.perception import elements
+        from yewo.agent.perception import elements
 
         self.assertEqual(
             elements.reason_for(elements.NAVIGATION_THRESHOLD), elements.NAVIGATION
@@ -439,8 +439,8 @@ class ScanVocabularyTests(unittest.TestCase):
 
     def test_each_describe_mode_arrival_is_audited(self):
         """One audit per screen arrived at, which is what marks mode gets."""
-        from ronin.agent.perception import elements
-        from ronin.testing.judge.qa_auditor import ScreenWatch
+        from yewo.agent.perception import elements
+        from yewo.testing.judge.qa_auditor import ScreenWatch
 
         audited = []
         watch = ScreenWatch(
@@ -473,8 +473,8 @@ class AnsweredRulesOnlyTests(unittest.TestCase):
     """
 
     def _audited(self, *verdicts, expected=None, security=None):
-        from ronin.testing.models import RuleVerification
-        from ronin.testing.judge.qa_auditor import QAAuditor
+        from yewo.testing.models import RuleVerification
+        from yewo.testing.judge.qa_auditor import QAAuditor
 
         answer = _assessment(
             rule_verifications=[
@@ -497,7 +497,7 @@ class AnsweredRulesOnlyTests(unittest.TestCase):
 
     def test_an_outcome_it_was_not_shown_is_dropped(self):
         """A transition outcome is blanked before the prompt, so it is not its to answer."""
-        from ronin.testing.models import AssertionScope, ExpectedOutcome
+        from yewo.testing.models import AssertionScope, ExpectedOutcome
 
         kept = self._audited(
             ("expected:0", "passed"),
@@ -531,8 +531,8 @@ class BareIndexIsAmbiguousTests(unittest.TestCase):
     """The auditor is shown both kinds of rule, so a bare index names neither."""
 
     def test_a_bare_index_is_not_read_as_an_expected_outcome(self):
-        from ronin.testing.models import RuleVerification
-        from ronin.testing.judge.qa_auditor import QAAuditor
+        from yewo.testing.models import RuleVerification
+        from yewo.testing.judge.qa_auditor import QAAuditor
 
         answer = _assessment(
             rule_verifications=[

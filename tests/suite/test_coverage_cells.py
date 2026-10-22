@@ -10,9 +10,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ronin.config import ConfigError
-from ronin.testing.suite import load_workflows
-from ronin.testing.taxonomy import (
+from yewo.config import ConfigError
+from yewo.testing.suite import load_workflows
+from yewo.testing.taxonomy import (
     Category,
     CoverageCell,
     Priority,
@@ -23,7 +23,7 @@ from ronin.testing.taxonomy import (
 
 
 def _file(body: str) -> Path:
-    path = Path(tempfile.mkdtemp()) / "ronin.yaml"
+    path = Path(tempfile.mkdtemp()) / "yewo.yaml"
     path.write_text(body)
     return path
 
@@ -254,7 +254,7 @@ class JourneyValueTests(unittest.TestCase):
         self.assertEqual(journey.values["actors.editor.email"], "editor@example.com")
 
     def test_an_actor_secret_is_masked_under_the_path_the_file_wrote(self):
-        """A name Ronin invented reads back in a report nobody can trace."""
+        """A name Yewo invented reads back in a report nobody can trace."""
         path = _file(
             "actors:\n"
             "  editor:\n"

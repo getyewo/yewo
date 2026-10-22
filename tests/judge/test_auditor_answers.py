@@ -11,13 +11,13 @@ from unittest.mock import Mock
 
 
 def _assessment(*verifications):
-    from ronin.testing.judge.qa_auditor import Assessment
+    from yewo.testing.judge.qa_auditor import Assessment
 
     return Assessment(screen_name="Cart", rule_verifications=list(verifications))
 
 
 def _verdict(rule, rule_id=None, status="passed"):
-    from ronin.testing.models import RuleVerification
+    from yewo.testing.models import RuleVerification
 
     return RuleVerification(
         rule=rule, rule_id=rule_id, status=status, reasoning="what it saw"
@@ -30,7 +30,7 @@ def _llm(*answers):
 
 
 def _auditor(llm, outcomes=("Order confirmed",), security=("Card masked",)):
-    from ronin.testing.judge.qa_auditor import QAAuditor
+    from yewo.testing.judge.qa_auditor import QAAuditor
 
     return QAAuditor(llm, list(outcomes), list(security))
 
@@ -89,7 +89,7 @@ class NamingTheRuleAnsweredTests(unittest.TestCase):
         so the second outcome is still `expected:1`. A map built from the
         listed rules has to number them the same way.
         """
-        from ronin.testing.models import AssertionScope, ExpectedOutcome
+        from yewo.testing.models import AssertionScope, ExpectedOutcome
 
         reached = ExpectedOutcome(
             statement="The cart screen is reached", scope=AssertionScope.TRANSITION

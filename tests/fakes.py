@@ -1,4 +1,4 @@
-"""Builders for the values Ronin's boundaries hand to its logic.
+"""Builders for the values Yewo's boundaries hand to its logic.
 
 Each one calls the real constructor. Rename or remove a field and the tests
 fail to build, rather than keep passing against a shape that production no
@@ -15,7 +15,7 @@ from unittest import mock
 
 from PIL import Image
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     AccessibilityCapability,
     AppStateCapability,
     BatteryCapability,
@@ -31,12 +31,12 @@ from ronin.agent.actuation.actions import (
     PermissionCapability,
     TimezoneCapability,
 )
-from ronin.agent.device import capability_receipts
-from ronin.agent.device.capability_controller import CapabilityController
-from ronin.agent.device.platform import Platform
-from ronin.agent.step.observation import PerceptionSnapshot
-from ronin.agent.perception.elements import BoundingBox, GUIElement
-from ronin.agent.grounding.marks import Mark
+from yewo.agent.device import capability_receipts
+from yewo.agent.device.capability_controller import CapabilityController
+from yewo.agent.device.platform import Platform
+from yewo.agent.step.observation import PerceptionSnapshot
+from yewo.agent.perception.elements import BoundingBox, GUIElement
+from yewo.agent.grounding.marks import Mark
 
 STAMP = "2026-01-01T00:00:00"
 
@@ -95,8 +95,8 @@ def qa_prompt(goal_lines=("Sign in",), setup=None):
     from types import SimpleNamespace
     from unittest.mock import Mock
 
-    from ronin.agent.device.launch import SetupMode
-    from ronin.testing.qa_planner import QAPlanner
+    from yewo.agent.device.launch import SetupMode
+    from yewo.testing.qa_planner import QAPlanner
 
     llm = SimpleNamespace(generate_response=Mock())
     planner = QAPlanner(llm_client=llm, setup=setup or SetupMode.CLEAR_DATA)
@@ -116,7 +116,7 @@ def walk(*instructions: str):
     Built through the real step models, so an instruction a step would refuse
     is refused here too rather than reaching a test as a bare string.
     """
-    from ronin.testing.steps import ActionStep
+    from yewo.testing.steps import ActionStep
 
     return [ActionStep(instruction=text) for text in instructions]
 
@@ -326,7 +326,7 @@ def suite_run(
         report_for: Called with each scenario, returning its report. A
             passing report by default.
         uncovered: Cells the generator could produce nothing for.
-        runner: Anything else to pass to `RoninTestRunner`.
+        runner: Anything else to pass to `YewoTestRunner`.
 
     Returns:
         The journey report, and the manifest as it was written.
@@ -335,9 +335,9 @@ def suite_run(
     from pathlib import Path
     from unittest.mock import patch
 
-    from ronin.testing.generator import GeneratedSuite
-    from ronin.testing.models import ScenarioReport, UserJourney
-    from ronin.testing.runner import RoninTestRunner
+    from yewo.testing.generator import GeneratedSuite
+    from yewo.testing.models import ScenarioReport, UserJourney
+    from yewo.testing.runner import YewoTestRunner
 
     root = Path(directory)
 
@@ -386,7 +386,7 @@ def suite_run(
 
     class Agent:
         def __init__(self, *_, **__):
-            from ronin.utils.secrets import SecretScrubber
+            from yewo.utils.secrets import SecretScrubber
 
             llm = SimpleNamespace(usage_callback=None)
             self._device_agent = SimpleNamespace(
@@ -400,14 +400,14 @@ def suite_run(
             return (report_for or passing)(test_case)
 
     with (
-        patch("ronin.testing.runner.DeviceSession", Session),
-        patch("ronin.testing.runner.ScenarioGenerator", Generator),
-        patch("ronin.testing.runner.QAAgent", Agent),
-        patch("ronin.testing.runner.ensure_device_ready"),
-        patch("ronin.testing.runner.for_grounding"),
-        patch("ronin.testing.runner.is_session_responsive", return_value=True),
+        patch("yewo.testing.runner.DeviceSession", Session),
+        patch("yewo.testing.runner.ScenarioGenerator", Generator),
+        patch("yewo.testing.runner.QAAgent", Agent),
+        patch("yewo.testing.runner.ensure_device_ready"),
+        patch("yewo.testing.runner.for_grounding"),
+        patch("yewo.testing.runner.is_session_responsive", return_value=True),
     ):
-        report = RoninTestRunner(
+        report = YewoTestRunner(
             device_name="Pixel_8", app_path="app.apk", **runner
         ).run_journey(
             journey

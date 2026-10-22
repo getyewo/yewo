@@ -1,5 +1,5 @@
 [project]
-name = "ronin-ai"
+name = "yewo"
 version = "0.1.0"
 description = "AI-driven mobile (Android and iOS) end-to-end testing agent"
 readme = "README.md"
@@ -28,26 +28,26 @@ dependencies = [
 
 [project.optional-dependencies]
 # Pulls torch (127MB on macOS arm64, 555MB on linux x86_64), so it is kept
-# out of the base install and fetched on demand. See ronin.utils.vision_deps.
+# out of the base install and fetched on demand. See yewo.utils.vision_deps.
 vision = [
     "ultralytics>=8.0.0",
     "easyocr>=1.6.0",
     "huggingface-hub>=0.16.0",
 ]
-# The decision model is reached through its own SDK. See ronin.utils.jev_deps.
+# The decision model is reached through its own SDK. See yewo.utils.jev_deps.
 jev = [
     "typesafe-sdk>=0.7.5",
 ]
 
 [project.scripts]
-ronin = "ronin.cli.main:main"
+yewo = "yewo.cli.main:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ronin"]
+packages = ["src/yewo"]
 
 [dependency-groups]
 dev = [
@@ -77,26 +77,26 @@ max-complexity = 21  # The project requirement is strictly less than 22.
 #
 # BLE001 is `except Exception`. These handlers still need narrowing.
 [tool.ruff.lint.per-file-ignores]
-"src/ronin/agent/device/control.py" = ["BLE001"]
-"src/ronin/agent/device/session.py" = ["BLE001"]
-"src/ronin/agent/run/agent.py" = ["BLE001"]
-"src/ronin/agent/plan/planner.py" = ["SIM108"]
-"src/ronin/agent/perception/detector.py" = ["B905"]
-"src/ronin/agent/memory/replay.py" = ["BLE001"]
-"src/ronin/agent/step/staleness.py" = ["BLE001"]
-"src/ronin/agent/step/targeting.py" = ["BLE001"]
-"src/ronin/agent/memory/trail.py" = ["BLE001"]
-"src/ronin/app_discovery.py" = ["BLE001"]
-"src/ronin/cli/devices.py" = ["B905"]
-"src/ronin/llm/llm_client.py" = ["BLE001", "SIM105"]
-"src/ronin/testing/cli.py" = ["BLE001"]
-"src/ronin/testing/generator.py" = ["BLE001"]
-"src/ronin/testing/qa_agent.py" = ["E402"]
-"src/ronin/testing/qa_planner.py" = ["SIM108"]
-"src/ronin/testing/runner.py" = ["BLE001"]
+"src/yewo/agent/device/control.py" = ["BLE001"]
+"src/yewo/agent/device/session.py" = ["BLE001"]
+"src/yewo/agent/run/agent.py" = ["BLE001"]
+"src/yewo/agent/plan/planner.py" = ["SIM108"]
+"src/yewo/agent/perception/detector.py" = ["B905"]
+"src/yewo/agent/memory/replay.py" = ["BLE001"]
+"src/yewo/agent/step/staleness.py" = ["BLE001"]
+"src/yewo/agent/step/targeting.py" = ["BLE001"]
+"src/yewo/agent/memory/trail.py" = ["BLE001"]
+"src/yewo/app_discovery.py" = ["BLE001"]
+"src/yewo/cli/devices.py" = ["B905"]
+"src/yewo/llm/llm_client.py" = ["BLE001", "SIM105"]
+"src/yewo/testing/cli.py" = ["BLE001"]
+"src/yewo/testing/generator.py" = ["BLE001"]
+"src/yewo/testing/qa_agent.py" = ["E402"]
+"src/yewo/testing/qa_planner.py" = ["SIM108"]
+"src/yewo/testing/runner.py" = ["BLE001"]
 
 [tool.pyright]
-include = ["src/ronin"]
+include = ["src/yewo"]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 venvPath = "."
@@ -104,13 +104,13 @@ venv = ".venv"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# The test tree mirrors src/ronin, so a test file no longer sits beside
+# The test tree mirrors src/yewo, so a test file no longer sits beside
 # fakes.py and pytest no longer puts tests/ on the path by itself.
 pythonpath = ["tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["src/ronin"]
+source = ["src/yewo"]
 
 [tool.coverage.report]
 show_missing = true

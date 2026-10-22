@@ -8,7 +8,7 @@ a stage that stops filling the record fails here.
 import unittest
 from types import SimpleNamespace
 
-from ronin.utils.secrets import SecretScrubber
+from yewo.utils.secrets import SecretScrubber
 
 
 class LoopRecordTests(unittest.TestCase):
@@ -19,7 +19,7 @@ class LoopRecordTests(unittest.TestCase):
 
         from PIL import Image
 
-        from ronin.agent.step.observation import PerceptionSnapshot
+        from yewo.agent.step.observation import PerceptionSnapshot
 
         buffer = io.BytesIO()
         image = Image.new("RGB", (4, 4))
@@ -37,8 +37,8 @@ class LoopRecordTests(unittest.TestCase):
     def _agent(self, response):
         from unittest.mock import Mock
 
-        from ronin.agent.grounding import GROUNDING_COORDINATES
-        from ronin.agent.run.agent import DeviceAgent
+        from yewo.agent.grounding import GROUNDING_COORDINATES
+        from yewo.agent.run.agent import DeviceAgent
 
         agent = DeviceAgent.__new__(DeviceAgent)
         agent.scrubber = SecretScrubber()
@@ -59,7 +59,7 @@ class LoopRecordTests(unittest.TestCase):
         return agent
 
     def _response(self, action):
-        from ronin.agent.plan.schema import DeviceStepResponse
+        from yewo.agent.plan.schema import DeviceStepResponse
 
         return DeviceStepResponse(
             current_screen="Sign in",
@@ -73,10 +73,10 @@ class LoopRecordTests(unittest.TestCase):
         from pathlib import Path
         from unittest.mock import Mock, patch
 
-        from ronin.agent.memory.history import AgentHistory
-        from ronin.agent.memory.loop_detector import RollingLoopDetector
-        from ronin.agent.run import record as record_module
-        from ronin.agent.run.context import RunContext
+        from yewo.agent.memory.history import AgentHistory
+        from yewo.agent.memory.loop_detector import RollingLoopDetector
+        from yewo.agent.run import record as record_module
+        from yewo.agent.run.context import RunContext
 
         agent = self._agent(self._response(action))
         ctx = RunContext(
@@ -88,10 +88,10 @@ class LoopRecordTests(unittest.TestCase):
         device.is_keyboard_open.return_value = False
 
         with (
-            patch("ronin.agent.step.observation.capture", return_value=self._snapshot()),
-            patch("ronin.agent.step.dispatch.settle.settle", return_value="phash-2"),
-            patch("ronin.agent.step.dispatch.ActionOrchestrator") as orchestrator,
-            patch("ronin.agent.device.state.context_drift", return_value=None),
+            patch("yewo.agent.step.observation.capture", return_value=self._snapshot()),
+            patch("yewo.agent.step.dispatch.settle.settle", return_value="phash-2"),
+            patch("yewo.agent.step.dispatch.ActionOrchestrator") as orchestrator,
+            patch("yewo.agent.device.state.context_drift", return_value=None),
         ):
             orchestrator.return_value.execute.return_value = None
             agent._run_step(
@@ -108,7 +108,7 @@ class LoopRecordTests(unittest.TestCase):
         return ctx.steps.records
 
     def test_one_step_leaves_one_complete_record(self):
-        from ronin.agent.actuation.actions import Coordinates, TapAction
+        from yewo.agent.actuation.actions import Coordinates, TapAction
 
         records = self._run_one(
             TapAction(coordinates=Coordinates(x=10, y=20), reason="sign in")
@@ -128,7 +128,7 @@ class LoopRecordTests(unittest.TestCase):
         self.assertEqual(step.screenshots["action"], "step001_action.png")
 
     def test_the_time_each_stage_took_is_recorded(self):
-        from ronin.agent.actuation.actions import Coordinates, TapAction
+        from yewo.agent.actuation.actions import Coordinates, TapAction
 
         step = self._run_one(
             TapAction(coordinates=Coordinates(x=10, y=20), reason="sign in")
@@ -138,7 +138,7 @@ class LoopRecordTests(unittest.TestCase):
             self.assertIsNotNone(getattr(step, name), name)
 
     def test_a_declared_secret_in_the_reasoning_never_reaches_the_record(self):
-        from ronin.agent.actuation.actions import Coordinates, TapAction
+        from yewo.agent.actuation.actions import Coordinates, TapAction
 
         step = self._run_one(
             TapAction(coordinates=Coordinates(x=10, y=20), reason="sign in")
@@ -148,7 +148,7 @@ class LoopRecordTests(unittest.TestCase):
         self.assertIn("{{password}}", step.decision.reasoning)
 
     def test_an_unlisted_target_is_recorded_as_a_step_that_reached_nothing(self):
-        from ronin.agent.actuation.actions import TargetNotListedAction
+        from yewo.agent.actuation.actions import TargetNotListedAction
 
         step = self._run_one(
             TargetNotListedAction(description="a Pay button", reason="pay")
@@ -170,7 +170,7 @@ class MarkerLifetimeTests(unittest.TestCase):
     def test_the_marker_is_cleared_when_the_run_ends(self):
         from unittest.mock import Mock, patch
 
-        from ronin.agent.run.agent import DeviceAgent
+        from yewo.agent.run.agent import DeviceAgent
 
         marked = []
         agent = DeviceAgent.__new__(DeviceAgent)
@@ -181,9 +181,9 @@ class MarkerLifetimeTests(unittest.TestCase):
         agent.step_opened = marked.append
 
         with (
-            patch("ronin.agent.run.agent.restart_app"),
+            patch("yewo.agent.run.agent.restart_app"),
             patch(
-                "ronin.agent.run.agent.replay_known_path",
+                "yewo.agent.run.agent.replay_known_path",
                 side_effect=RuntimeError("stop here"),
             ),
         ):
@@ -199,8 +199,8 @@ class MarkerLifetimeTests(unittest.TestCase):
     def test_the_marker_is_cleared_even_when_the_run_raises(self):
         from unittest.mock import Mock, patch
 
-        from ronin.agent.run.agent import DeviceAgent
-        from ronin.errors import ProviderUnavailable
+        from yewo.agent.run.agent import DeviceAgent
+        from yewo.errors import ProviderUnavailable
 
         marked = []
         agent = DeviceAgent.__new__(DeviceAgent)
@@ -211,9 +211,9 @@ class MarkerLifetimeTests(unittest.TestCase):
         agent.step_opened = marked.append
 
         with (
-            patch("ronin.agent.run.agent.restart_app"),
+            patch("yewo.agent.run.agent.restart_app"),
             patch(
-                "ronin.agent.run.agent.replay_known_path",
+                "yewo.agent.run.agent.replay_known_path",
                 side_effect=ProviderUnavailable("spent"),
             ),
             self.assertRaises(ProviderUnavailable),
@@ -239,13 +239,13 @@ class FailedActionTests(unittest.TestCase):
     def _dispatched(self, failure):
         from unittest.mock import Mock, patch
 
-        from ronin.agent.actuation.actions import Coordinates, TapAction
-        from ronin.agent.memory.history import AgentHistory
-        from ronin.agent.memory.loop_detector import RollingLoopDetector
-        from ronin.agent.plan.schema import DeviceStepResponse
-        from ronin.agent.run.context import RunContext
-        from ronin.agent.run.record import StepLog
-        from ronin.agent.step import dispatch
+        from yewo.agent.actuation.actions import Coordinates, TapAction
+        from yewo.agent.memory.history import AgentHistory
+        from yewo.agent.memory.loop_detector import RollingLoopDetector
+        from yewo.agent.plan.schema import DeviceStepResponse
+        from yewo.agent.run.context import RunContext
+        from yewo.agent.run.record import StepLog
+        from yewo.agent.step import dispatch
 
         action = TapAction(coordinates=Coordinates(x=1, y=2), reason="sign in")
         scrubber = SecretScrubber()
@@ -258,8 +258,8 @@ class FailedActionTests(unittest.TestCase):
         ctx.steps.open(1)
 
         with (
-            patch("ronin.agent.step.dispatch.settle.settle", return_value="phash-2"),
-            patch("ronin.agent.step.dispatch.ActionOrchestrator") as orchestrator,
+            patch("yewo.agent.step.dispatch.settle.settle", return_value="phash-2"),
+            patch("yewo.agent.step.dispatch.ActionOrchestrator") as orchestrator,
         ):
             orchestrator.return_value.execute.side_effect = failure
             dispatch.execute(
@@ -297,7 +297,7 @@ class FailedActionTests(unittest.TestCase):
         self.assertEqual(ctx.stall.count, 1)
 
     def test_a_target_that_took_nothing_is_recorded_the_same_way(self):
-        from ronin.errors import TargetNotInteractive
+        from yewo.errors import TargetNotInteractive
 
         ctx = self._dispatched(TargetNotInteractive("the field took no text"))
         step = ctx.steps.records[0]

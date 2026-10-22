@@ -9,7 +9,7 @@ from unittest.mock import Mock
 import fakes
 
 
-from ronin.errors import ObservationUnavailable
+from yewo.errors import ObservationUnavailable
 
 
 class StalenessTests(unittest.TestCase):
@@ -38,12 +38,12 @@ class StalenessTests(unittest.TestCase):
         return fakes.element(box=box)
 
     def _tap(self, x, y):
-        from ronin.agent.actuation.actions import TapAction, Coordinates
+        from yewo.agent.actuation.actions import TapAction, Coordinates
 
         return TapAction(coordinates=Coordinates(x=x, y=y), reason="tap it")
 
     def test_an_unchanged_target_is_not_stale(self):
-        from ronin.agent.step.staleness import target_moved
+        from yewo.agent.step.staleness import target_moved
 
         before = self._png("white", ((10, 10, 60, 60), (0, 0, 0)))
 
@@ -52,7 +52,7 @@ class StalenessTests(unittest.TestCase):
         )
 
     def test_a_target_that_moved_is_stale(self):
-        from ronin.agent.step.staleness import target_moved
+        from yewo.agent.step.staleness import target_moved
 
         before = self._png("white", ((10, 10, 60, 60), (0, 0, 0)))
         after = self._png("white")
@@ -63,7 +63,7 @@ class StalenessTests(unittest.TestCase):
 
     def test_change_elsewhere_on_screen_is_ignored(self):
         """A banner landing in the corner must not throw away a good plan."""
-        from ronin.agent.step.staleness import target_moved
+        from yewo.agent.step.staleness import target_moved
 
         before = self._png("white", ((10, 10, 60, 60), (0, 0, 0)))
         after = self._png("white", ((10, 10, 60, 60), (0, 0, 0)))
@@ -74,7 +74,7 @@ class StalenessTests(unittest.TestCase):
         )
 
     def test_a_point_outside_every_element_still_gets_checked(self):
-        from ronin.agent.step.staleness import target_moved
+        from yewo.agent.step.staleness import target_moved
 
         before = self._png("white", ((100, 300, 190, 390), (0, 0, 0)))
         after = self._png("white")
@@ -82,8 +82,8 @@ class StalenessTests(unittest.TestCase):
         self.assertTrue(target_moved(before, after, self._tap(145, 345), []))
 
     def test_an_action_with_no_target_is_never_stale(self):
-        from ronin.agent.actuation.actions import KeyEventAction
-        from ronin.agent.step.staleness import target_moved
+        from yewo.agent.actuation.actions import KeyEventAction
+        from yewo.agent.step.staleness import target_moved
 
         before = self._png("white", ((10, 10, 60, 60), (0, 0, 0)))
         after = self._png("black")
@@ -93,7 +93,7 @@ class StalenessTests(unittest.TestCase):
         )
 
     def test_an_unreadable_screenshot_does_not_strand_the_run(self):
-        from ronin.agent.step.staleness import target_moved
+        from yewo.agent.step.staleness import target_moved
 
         self.assertFalse(
             target_moved(b"not a png", b"nor this", self._tap(30, 30), [])
@@ -116,8 +116,8 @@ class TargetDecisionTests(unittest.TestCase):
 
     def test_a_valid_number_becomes_the_point_to_touch(self):
         """The number is swapped for its coordinate twin — every mode ends in a point."""
-        from ronin.agent.actuation.actions import TapAction, TapMarkAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import TapAction, TapMarkAction
+        from yewo.agent.step.targeting import evaluate
 
         decision = evaluate(
             TapMarkAction(mark=1, reason="continue"),
@@ -132,8 +132,8 @@ class TargetDecisionTests(unittest.TestCase):
         )
 
     def test_a_number_that_names_nothing_stops_the_step(self):
-        from ronin.agent.actuation.actions import TapMarkAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import TapMarkAction
+        from yewo.agent.step.targeting import evaluate
 
         decision = evaluate(
             TapMarkAction(mark=47, reason="continue"),
@@ -152,8 +152,8 @@ class TargetDecisionTests(unittest.TestCase):
         a second refusal ends the run is the loop's call, because only the loop
         knows if the screen changed.
         """
-        from ronin.agent.actuation.actions import TargetNotListedAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import TargetNotListedAction
+        from yewo.agent.step.targeting import evaluate
 
         decision = evaluate(
             TargetNotListedAction(description="blue button at the bottom", reason="r"),
@@ -168,7 +168,7 @@ class TargetDecisionTests(unittest.TestCase):
 
     def test_a_missing_target_names_itself_in_the_reason(self):
         """The report should say which wall the run hit, not only that it stopped."""
-        from ronin.agent.step.targeting import Decision, stalled_reason
+        from yewo.agent.step.targeting import Decision, stalled_reason
 
         reason = stalled_reason(Decision(ok=False, unmatched=True, target="the CVV field"))
 
@@ -176,15 +176,15 @@ class TargetDecisionTests(unittest.TestCase):
         self.assertIn("the CVV field", reason)
 
     def test_any_other_refusal_carries_its_own_observation(self):
-        from ronin.agent.step.targeting import Decision, stalled_reason
+        from yewo.agent.step.targeting import Decision, stalled_reason
 
         reason = stalled_reason(Decision(ok=False, observation="element 17 takes no text"))
 
         self.assertIn("element 17 takes no text", reason)
 
     def test_coordinates_still_work_when_marks_are_not_in_use(self):
-        from ronin.agent.actuation.actions import Coordinates, TapAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import Coordinates, TapAction
+        from yewo.agent.step.targeting import evaluate
 
         action = TapAction(coordinates=Coordinates(x=5, y=6), reason="tap")
 
@@ -192,8 +192,8 @@ class TargetDecisionTests(unittest.TestCase):
 
     def test_an_untargeted_action_does_not_re_read_the_screen(self):
         """A key event is aimed at no point, so there is nothing to re-check."""
-        from ronin.agent.actuation.actions import KeyEventAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import KeyEventAction
+        from yewo.agent.step.targeting import evaluate
 
         device = self._device()
 
@@ -206,8 +206,8 @@ class TargetDecisionTests(unittest.TestCase):
 
     def test_a_target_that_moved_stops_the_step(self):
         """The number resolved to a point, but the screen moved under it."""
-        from ronin.agent.actuation.actions import TapMarkAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import TapMarkAction
+        from yewo.agent.step.targeting import evaluate
 
         decision = evaluate(
             TapMarkAction(mark=1, reason="continue"),
@@ -220,8 +220,8 @@ class TargetDecisionTests(unittest.TestCase):
 
     def test_a_screen_that_cannot_be_read_again_stops_the_step(self):
         """No current screen is no evidence that the target survived."""
-        from ronin.agent.actuation.actions import TapMarkAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import TapMarkAction
+        from yewo.agent.step.targeting import evaluate
 
         device = SimpleNamespace(
             get_screenshot=Mock(side_effect=ObservationUnavailable("session gone"))
@@ -237,8 +237,8 @@ class TargetDecisionTests(unittest.TestCase):
         self.assertIn("could not be read", decision.observation)
 
     def test_an_empty_screenshot_stops_the_step(self):
-        from ronin.agent.actuation.actions import TapMarkAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import TapMarkAction
+        from yewo.agent.step.targeting import evaluate
 
         decision = evaluate(
             TapMarkAction(mark=1, reason="continue"),
@@ -251,8 +251,8 @@ class TargetDecisionTests(unittest.TestCase):
 
     def test_resolving_a_number_leaves_the_proposed_action_untouched(self):
         """A proposed action is parsed once, never edited into a resolved one."""
-        from ronin.agent.actuation.actions import TapMarkAction
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.actuation.actions import TapMarkAction
+        from yewo.agent.step.targeting import evaluate
 
         proposed = TapMarkAction(mark=1, reason="continue")
 
@@ -273,14 +273,14 @@ class GroundingContractTests(unittest.TestCase):
         return SimpleNamespace(get_screenshot=Mock(return_value=fakes.solid_png()))
 
     def _verdict(self, action, grounding):
-        from ronin.agent.step.targeting import evaluate
+        from yewo.agent.step.targeting import evaluate
 
         return evaluate(action, self._snapshot(), self._device(), grounding)
 
     def test_marks_mode_refuses_raw_coordinates(self):
         """Obeying them would reinstate the invented coordinate numbering prevents."""
-        from ronin.agent.actuation.actions import Coordinates, TapAction
-        from ronin.agent.plan.planner import GROUNDING_MARKS
+        from yewo.agent.actuation.actions import Coordinates, TapAction
+        from yewo.agent.plan.planner import GROUNDING_MARKS
 
         decision = self._verdict(
             TapAction(coordinates=Coordinates(x=535, y=1222), reason="r"),
@@ -294,7 +294,7 @@ class GroundingContractTests(unittest.TestCase):
         """Prose plus a runtime check is not enough — the model obeys the schema."""
         from pydantic import ValidationError
 
-        from ronin.agent.actuation.actions import TapAction, TapMarkAction
+        from yewo.agent.actuation.actions import TapAction, TapMarkAction
 
         with self.assertRaises(ValidationError):
             TapAction(reason="r")  # coordinates are required
@@ -304,7 +304,7 @@ class GroundingContractTests(unittest.TestCase):
         self.assertNotIn("mark", TapAction.model_fields)
 
     def test_the_marks_schema_offers_no_coordinates_at_all(self):
-        from ronin.agent.plan.planner import MarksStepResponse
+        from yewo.agent.plan.planner import MarksStepResponse
 
         schema = MarksStepResponse.model_json_schema()
         tap = next(d for n, d in schema["$defs"].items() if n.startswith("Tap"))
@@ -314,13 +314,13 @@ class GroundingContractTests(unittest.TestCase):
         self.assertIn("mark", tap["required"])
 
     def test_an_untargeted_action_needs_neither(self):
-        from ronin.agent.actuation.actions import KeyEventAction
-        from ronin.agent.plan.planner import GROUNDING_MARKS
+        from yewo.agent.actuation.actions import KeyEventAction
+        from yewo.agent.plan.planner import GROUNDING_MARKS
 
         self.assertTrue(self._verdict(KeyEventAction(key=4, reason="back"), GROUNDING_MARKS).ok)
 
     def test_the_heading_matches_the_mode(self):
-        from ronin.agent.plan.planner import (
+        from yewo.agent.plan.planner import (
             GROUNDING_COORDINATES,
             GROUNDING_MARKS,
             DevicePlanner,
@@ -333,8 +333,8 @@ class GroundingContractTests(unittest.TestCase):
         self.assertIn("numbered", planner._target_heading())
 
     def test_the_orchestrator_explains_why_not_listed_cannot_run(self):
-        from ronin.agent.actuation.actions import TargetNotListedAction
-        from ronin.agent.actuation.orchestrator import ActionOrchestrator
+        from yewo.agent.actuation.actions import TargetNotListedAction
+        from yewo.agent.actuation.orchestrator import ActionOrchestrator
 
         orchestrator = ActionOrchestrator.__new__(ActionOrchestrator)
         orchestrator._scrubber = None
@@ -347,7 +347,7 @@ class GroundingContractTests(unittest.TestCase):
         self.assertIn("nothing to", str(caught.exception))
 
     def test_an_unmatched_screen_is_saved_redacted(self):
-        from ronin.agent.artifacts.steps import save_unmatched_screen
+        from yewo.agent.artifacts.steps import save_unmatched_screen
 
         media = Mock()
         snapshot = SimpleNamespace(raw_img_bytes=b"png", gui_elements=["el"])
@@ -361,13 +361,13 @@ class CoordinateShapeTests(unittest.TestCase):
     """The model answered with [x, y] and killed every scenario at step one."""
 
     def test_a_pair_is_read_as_coordinates(self):
-        from ronin.agent.actuation.actions import Coordinates
+        from yewo.agent.actuation.actions import Coordinates
 
         self.assertEqual(Coordinates.model_validate([537, 1260]).x, 537)
         self.assertEqual(Coordinates.model_validate((537, 1260)).y, 1260)
 
     def test_an_object_still_works(self):
-        from ronin.agent.actuation.actions import Coordinates
+        from yewo.agent.actuation.actions import Coordinates
 
         coordinates = Coordinates.model_validate({"x": 1, "y": 2})
         self.assertEqual((coordinates.x, coordinates.y), (1, 2))
@@ -375,7 +375,7 @@ class CoordinateShapeTests(unittest.TestCase):
     def test_a_whole_action_survives_the_pair_form(self):
         from pydantic import TypeAdapter
 
-        from ronin.agent.actuation.actions import Action
+        from yewo.agent.actuation.actions import Action
 
         action = TypeAdapter(Action).validate_python(
             {"type": "tap", "coordinates": [537, 1260], "reason": "tap Login"}

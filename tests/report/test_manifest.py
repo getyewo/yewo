@@ -12,15 +12,15 @@ from pathlib import Path
 
 from fakes import walk
 
-from ronin.agent.run.record import DecisionRecord, StepRecord
-from ronin.testing.models import GeneratedTestCase, RunEnvironment, ScenarioReport, UserJourney
-from ronin.testing.report.manifest import SCHEMA, Inputs, RunManifest, Subject
-from ronin.utils.secrets import SecretScrubber
+from yewo.agent.run.record import DecisionRecord, StepRecord
+from yewo.testing.models import GeneratedTestCase, RunEnvironment, ScenarioReport, UserJourney
+from yewo.testing.report.manifest import SCHEMA, Inputs, RunManifest, Subject
+from yewo.utils.secrets import SecretScrubber
 
 
 def environment() -> RunEnvironment:
     return RunEnvironment(
-        ronin_version="0.1.0",
+        yewo_version="0.1.0",
         model="openrouter/m",
         platform="android",
         grounding="marks",
@@ -141,7 +141,7 @@ class PlanTests(unittest.TestCase):
 
     def test_a_locked_scenario_names_its_outcomes_the_same_way_every_run(self):
         """Which is what lets one outcome be compared between two runs."""
-        from ronin.testing.models import GeneratedTestCase
+        from yewo.testing.models import GeneratedTestCase
 
         one = scenario(1, expected_outcomes=["a"])
         again = GeneratedTestCase(
@@ -361,7 +361,7 @@ class SecretTests(unittest.TestCase):
         Both are written by somebody else and both reach this file, so both
         go through the scrubber like everything else in it.
         """
-        from ronin.testing.models import (
+        from yewo.testing.models import (
             ExpectedOutcome, Rendering, SensitiveFinding, VerdictInputs,
         )
 
@@ -405,10 +405,10 @@ class SecretTests(unittest.TestCase):
 
 
 class GoalRunTests(unittest.TestCase):
-    """`ronin run` writes one too, or it cannot be read back at all."""
+    """`yewo run` writes one too, or it cannot be read back at all."""
 
     def _goal(self, directory) -> RunManifest:
-        from ronin.testing.report.manifest import Subject
+        from yewo.testing.report.manifest import Subject
 
         return RunManifest(
             Path(directory) / "run.json",
@@ -459,7 +459,7 @@ class GoalRunTests(unittest.TestCase):
             self.assertEqual(written(record)["status"], "FAILED")
 
     def test_the_artifact_classes_travel_with_the_record(self):
-        from ronin.testing.sensitivity import declared_for
+        from yewo.testing.sensitivity import declared_for
 
         with tempfile.TemporaryDirectory() as directory:
             record = manifest(directory, [scenario(1)])

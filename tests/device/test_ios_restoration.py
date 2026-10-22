@@ -11,13 +11,13 @@ from unittest import mock
 
 from fakes import IosDriver, ios_device
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     AccessibilityCapability,
     LocationCapability,
     PermissionCapability,
 )
-from ronin.agent.device import restoration
-from ronin.errors import DeviceUnavailable
+from yewo.agent.device import restoration
+from yewo.errors import DeviceUnavailable
 
 SCREEN_READER = AccessibilityCapability(enabled=True)
 

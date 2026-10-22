@@ -11,10 +11,10 @@ from unittest import mock
 
 from fakes import PACKAGE, SERIAL, session as device
 
-from ronin.agent.device import restoration
-from ronin.agent.device.platform import Platform
-from ronin.agent.device.restoration import AndroidStateSnapshot
-from ronin.errors import DeviceUnavailable
+from yewo.agent.device import restoration
+from yewo.agent.device.platform import Platform
+from yewo.agent.device.restoration import AndroidStateSnapshot
+from yewo.errors import DeviceUnavailable
 
 
 FOUND = {

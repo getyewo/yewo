@@ -11,15 +11,15 @@ from unittest import mock
 
 import httpx
 
-from ronin.utils.jev_deps import jev_available
+from yewo.utils.jev_deps import jev_available
 from fakes import rate_limited, refused
 from litellm import exceptions
 from pydantic import BaseModel, ValidationError
 
-from ronin.errors import Cause, ProviderUnavailable, cause_of
-from ronin.llm import failures
-from ronin.llm.llm_client import LLMClient
-from ronin.llm.messages import TextMessage
+from yewo.errors import Cause, ProviderUnavailable, cause_of
+from yewo.llm import failures
+from yewo.llm.llm_client import LLMClient
+from yewo.llm.messages import TextMessage
 
 
 class Answer(BaseModel):
@@ -183,7 +183,7 @@ class ReportTextTests(unittest.TestCase):
     """
 
     def _reportable(self, error):
-        from ronin.testing.runner import reportable
+        from yewo.testing.runner import reportable
 
         return reportable(error)
 
@@ -204,7 +204,7 @@ class ReportTextTests(unittest.TestCase):
 
         self.assertNotIn("4111", text)
 
-    def test_ronins_own_provider_failure_keeps_what_ronin_wrote(self):
+    def test_yewos_own_provider_failure_keeps_what_yewo_wrote(self):
         """It already names the failure and the attempts, and reducing it loses both."""
         text = self._reportable(
             ProviderUnavailable(
@@ -218,7 +218,7 @@ class ReportTextTests(unittest.TestCase):
 
     def test_every_other_failure_keeps_its_message(self):
         """A device message is what tells a reader what broke."""
-        from ronin.errors import DeviceUnavailable
+        from yewo.errors import DeviceUnavailable
 
         text = self._reportable(DeviceUnavailable("the emulator stopped responding"))
 
@@ -232,8 +232,8 @@ class DecisionModelTests(unittest.TestCase):
     """The grounding model is a provider too, and it rate-limits like one.
 
     It is reached through its own SDK rather than through the completion
-    client, so none of Ronin's policy reached it. The SDK retried on its own
-    schedule, which Ronin could neither bound nor report, and a rate limit
+    client, so none of Yewo's policy reached it. The SDK retried on its own
+    schedule, which Yewo could neither bound nor report, and a rate limit
     that outlasted it ended the scenario.
 
     These cases are the policy. `test_decisions.py` holds the SDK to taking

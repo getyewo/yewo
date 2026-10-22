@@ -10,7 +10,7 @@ class UsageRecordTests(unittest.TestCase):
     """Every call is written down whole, so a later question still has an answer."""
 
     def _call(self, **overrides):
-        from ronin.llm.usage import CallRecord
+        from yewo.llm.usage import CallRecord
 
         values = {
             "model": "provider/model",
@@ -28,7 +28,7 @@ class UsageRecordTests(unittest.TestCase):
         return CallRecord(**values)
 
     def _recorded(self, *calls):
-        from ronin.testing.report.usage_tracker import LLMUsageTracker
+        from yewo.testing.report.usage_tracker import LLMUsageTracker
 
         with tempfile.TemporaryDirectory() as directory:
             tracker = LLMUsageTracker(Path(directory))
@@ -70,8 +70,8 @@ class UsageRecordTests(unittest.TestCase):
         )
 
     def test_declared_secrets_are_masked_inside_the_dumped_response(self):
-        from ronin.testing.report.usage_tracker import LLMUsageTracker
-        from ronin.utils.secrets import SecretScrubber
+        from yewo.testing.report.usage_tracker import LLMUsageTracker
+        from yewo.utils.secrets import SecretScrubber
 
         scrubber = SecretScrubber()
         scrubber.learn_secrets({"password": "hunter2"})
@@ -90,7 +90,7 @@ class UsageTotalsTests(unittest.TestCase):
     """The totals are a fixed set of fields, so they are a type rather than a dict."""
 
     def _call(self, **overrides):
-        from ronin.llm.usage import CallRecord
+        from yewo.llm.usage import CallRecord
 
         values = {
             "model": "provider/model",
@@ -105,7 +105,7 @@ class UsageTotalsTests(unittest.TestCase):
         return CallRecord(**values)
 
     def test_totals_accumulate_across_calls(self):
-        from ronin.testing.report.usage_tracker import Totals
+        from yewo.testing.report.usage_tracker import Totals
 
         totals = Totals()
         totals.add(self._call(prompt_tokens=10, cost=0.002))
@@ -116,7 +116,7 @@ class UsageTotalsTests(unittest.TestCase):
         self.assertAlmostEqual(totals.total_estimated_cost_usd, 0.005)
 
     def test_a_missing_cost_is_counted_not_treated_as_free(self):
-        from ronin.testing.report.usage_tracker import Totals
+        from yewo.testing.report.usage_tracker import Totals
 
         totals = Totals()
         totals.add(self._call(cost=None))
@@ -125,7 +125,7 @@ class UsageTotalsTests(unittest.TestCase):
         self.assertEqual(totals.total_estimated_cost_usd, 0.0)
 
     def test_the_report_keeps_the_field_names_already_on_disk(self):
-        from ronin.testing.report.usage_tracker import Totals
+        from yewo.testing.report.usage_tracker import Totals
         from dataclasses import asdict
 
         written = asdict(Totals())
@@ -153,7 +153,7 @@ class DecisionRecordTests(unittest.TestCase):
         )
 
     def _record(self, response):
-        from ronin.llm.usage import record_decision
+        from yewo.llm.usage import record_decision
 
         return record_decision(response, "typesafe/jev-1.14.0", 264.0, 0.000135)
 
@@ -200,7 +200,7 @@ class ResponseReadingTests(unittest.TestCase):
         )
 
     def _record(self, **kwargs):
-        from ronin.llm.usage import record
+        from yewo.llm.usage import record
 
         return record(self._response(**kwargs), "provider/model", 1)
 
@@ -263,7 +263,7 @@ class AnsweredShapeTests(unittest.TestCase):
         )
 
     def test_the_shape_asked_for_is_recorded_by_name(self):
-        from ronin.llm.usage import record
+        from yewo.llm.usage import record
 
         kept = record(
             self._response(), "provider/model", 1, answering="QAStepResponse"
@@ -272,7 +272,7 @@ class AnsweredShapeTests(unittest.TestCase):
         self.assertEqual(kept.answering, "QAStepResponse")
 
     def test_a_call_that_required_no_shape_names_none(self):
-        from ronin.llm.usage import record
+        from yewo.llm.usage import record
 
         self.assertIsNone(record(self._response(), "provider/model", 1).answering)
 
@@ -282,8 +282,8 @@ class AnsweredShapeTests(unittest.TestCase):
 
         from pydantic import BaseModel
 
-        from ronin.llm.llm_client import LLMClient
-        from ronin.llm.messages import TextMessage
+        from yewo.llm.llm_client import LLMClient
+        from yewo.llm.messages import TextMessage
 
         class Verdict(BaseModel):
             ok: bool
@@ -296,7 +296,7 @@ class AnsweredShapeTests(unittest.TestCase):
                                 "message": type("M", (), {"content": '{"ok": true}'})()})()
         ]
 
-        with patch("ronin.llm.llm_client.litellm.completion", return_value=answer):
+        with patch("yewo.llm.llm_client.litellm.completion", return_value=answer):
             client.generate_response([TextMessage(content="hi")], Verdict)
 
         self.assertEqual(kept[0].answering, "Verdict")

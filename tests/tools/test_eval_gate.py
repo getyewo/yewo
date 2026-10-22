@@ -292,7 +292,7 @@ class ExitCodeTests(unittest.TestCase):
              mock.patch.object(tiers, "judge_verdicts", return_value=[]), \
              mock.patch.object(gate, "_model", return_value="a/model"), \
              mock.patch(
-                 "ronin.llm.credentials.missing_credentials", return_value=["A_KEY"]
+                 "yewo.llm.credentials.missing_credentials", return_value=["A_KEY"]
              ):
             self.assertEqual(gate.main(["--screens"]), 3)
 
@@ -301,13 +301,13 @@ class ExitCodeTests(unittest.TestCase):
             mock.patch.object(corpus, "verdict_fixtures", return_value=[]),
             mock.patch.object(tiers, "judge_verdicts", return_value=[]),
             mock.patch.object(gate, "_model", return_value="a/model"),
-            mock.patch("ronin.llm.credentials.missing_credentials", return_value=[]),
+            mock.patch("yewo.llm.credentials.missing_credentials", return_value=[]),
             mock.patch.object(tiers, "audit_screens", side_effect=error),
         ]
 
     def test_a_provider_that_cannot_answer_is_not_read_as_a_regression(self):
         """An outage must not send somebody looking for a prompt they kept."""
-        from ronin.errors import ProviderUnavailable
+        from yewo.errors import ProviderUnavailable
 
         with ExitStack() as patches:
             for patch in self._screens_raising(
@@ -332,7 +332,7 @@ class ExitCodeTests(unittest.TestCase):
              mock.patch.object(tiers, "judge_verdicts", return_value=[]), \
              mock.patch.object(gate, "_model", return_value="a/model"), \
              mock.patch(
-                 "ronin.llm.credentials.missing_credentials", return_value=[]
+                 "yewo.llm.credentials.missing_credentials", return_value=[]
              ), \
              mock.patch.object(
                  tiers, "audit_screens",

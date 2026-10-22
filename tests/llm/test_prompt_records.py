@@ -13,9 +13,9 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ronin.llm.messages import ImageMessage, MultiPartMessage, SystemMessage, TextMessage
-from ronin.llm.prompts import PromptStore, schema_sha256
-from ronin.utils.secrets import SecretScrubber
+from yewo.llm.messages import ImageMessage, MultiPartMessage, SystemMessage, TextMessage
+from yewo.llm.prompts import PromptStore, schema_sha256
+from yewo.utils.secrets import SecretScrubber
 
 
 class Answer(BaseModel):
@@ -182,7 +182,7 @@ class AgentWiringTests(unittest.TestCase):
     def _agent(self, grounder=None):
         from types import SimpleNamespace
 
-        from ronin.agent.run.agent import DeviceAgent
+        from yewo.agent.run.agent import DeviceAgent
 
         agent = DeviceAgent.__new__(DeviceAgent)
         agent.llm = SimpleNamespace(prompt_store=None)
@@ -223,7 +223,7 @@ class ImageIdentityTests(unittest.TestCase):
         """The decision route hashes the bytes it was handed. These have to agree."""
         import hashlib
 
-        from ronin.llm.prompts import _image_digest
+        from yewo.llm.prompts import _image_digest
 
         png = b"\x89PNG\r\n\x1a\n" + bytes(range(64))
         message = ImageMessage(text="look", png_bytes=png)
@@ -245,12 +245,12 @@ class ImageIdentityTests(unittest.TestCase):
 
     def test_a_url_that_is_not_inline_data_is_left_unhashed(self):
         """The record says what was sent. A fetch would say what is there now."""
-        from ronin.llm.prompts import _image_digest
+        from yewo.llm.prompts import _image_digest
 
         self.assertIsNone(_image_digest("https://example.com/shot.png"))
 
     def test_data_that_will_not_decode_is_recorded_as_nothing(self):
-        from ronin.llm.prompts import _image_digest
+        from yewo.llm.prompts import _image_digest
 
         self.assertIsNone(_image_digest("data:image/png;base64,not!valid!base64"))
 

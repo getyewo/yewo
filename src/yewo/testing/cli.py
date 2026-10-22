@@ -1,0 +1,185 @@
+import argparse
+import logging
+from typing import Any, List, Optional
+
+from yewo.app_discovery import resolve_journey_file
+from yewo.config import Config, load_config
+from yewo.defaults import LOG_LEVELS
+from yewo.errors import UsageError
+from yewo.schema import GROUNDINGS, PLATFORMS
+from .suite import load_workflows, select
+from .wiring import runner_for
+
+logger = logging.getLogger(__name__)
+
+
+class YewoCLI:
+    """Encapsulates the CLI parsing, test suite execution, and summary reporting for Yewo."""
+
+    def __init__(self, config: Optional[Config] = None):
+        self.config = config or load_config()
+        self.parser = self._create_parser()
+
+    def _create_parser(self) -> argparse.ArgumentParser:
+        parser = argparse.ArgumentParser(description="Yewo QA Journey-Based Testing CLI")
+        parser.add_argument(
+            "journey_file",
+            nargs="?",
+            help="Path to the journey YAML/JSON file. Found in this directory when omitted.",
+        )
+        parser.add_argument("--platform", choices=list(PLATFORMS), help="Target platform")
+        parser.add_argument("--device", help="Name of emulator/device")
+        parser.add_argument("--app-path", help="App binary path")
+        parser.add_argument("--output-dir", help="Directory to save test outputs and reports")
+        parser.add_argument("--max-steps", type=int, help="Max steps per test scenario execution")
+        parser.add_argument("--settle-time", type=float, help="Settle time after actions")
+        parser.add_argument("--model", help="LiteLLM model to use")
+        parser.add_argument("--fast-model", help="Cheaper/faster LiteLLM model for ReAct step planning")
+        parser.add_argument("--headless", action="store_true", default=None, help="Run android emulator headlessly")
+        parser.add_argument(
+            "--grounding",
+            choices=list(GROUNDINGS),
+            help="How the planner names a target. 'coordinates' is the "
+            "default. 'marks' numbers every detected element on the screenshot, "
+            "and the planner picks a number. Yewo checks that number against "
+            "the detected set before anything runs. 'describe' detects nothing, "
+            "and the planner names its target in words.",
+        )
+        parser.add_argument(
+            "--reuse-app",
+            action="store_true",
+            help="Skip reinstalling the app, using whatever build is on the device. "
+            "Only correct when that build is the one under test: a rebuilt debug APK "
+            "keeps its version, so a stale one is used without warning",
+        )
+        parser.add_argument(
+            "--log-level",
+            choices=LOG_LEVELS,
+            help="Logging verbosity, when given after the subcommand",
+        )
+        parser.add_argument(
+            "--workflow",
+            help="Which workflow(s) in the file to run, comma separated. "
+            "Every workflow runs when this is not given",
+        )
+        parser.add_argument(
+            "--no-record",
+            action="store_true",
+            help="Do not record the screen. The run reports results either way, "
+            "but no video is kept",
+        )
+        parser.add_argument(
+            "--keep-app",
+            action="store_true",
+            help="Leave the app installed when the run ends. By default a run uninstalls "
+            "the app it installed, so a rotation of apps does not fill the device. An app "
+            "that was already on the device is never removed",
+        )
+        parser.add_argument(
+            "--no-persist-inputs",
+            action="store_true",
+            help="Record the hash of every prompt and not its text. The run still "
+            "says that two runs asked the same thing, and keeps no model input",
+        )
+        parser.add_argument(
+            "--record-secrets",
+            action="store_true",
+            help="Record the screen even for a journey that declares secrets. "
+            "Nothing masks a video frame, so a declared value typed on screen is "
+            "in the recording",
+        )
+        parser.add_argument(
+            "--locked",
+            action="store_true",
+            help="Run exactly what yewo.lock holds, and fail when it is missing or "
+            "stale rather than generating a different suite. What CI uses",
+        )
+        parser.add_argument(
+            "--replay",
+            action="store_true",
+            help="Re-execute navigation already worked out in an earlier scenario instead of "
+            "re-planning it. Faster, but replayed screens are not perceived or audited",
+        )
+        return parser
+
+    def run(self, args_list: Optional[List[str]] = None) -> int:
+        """Parses arguments and executes the suite they ask for."""
+        return self.run_parsed(self.parser.parse_args(args_list))
+
+    def run_parsed(self, args: Any) -> int:
+        """Executes all loaded journeys, prints a summary, and returns a code.
+
+        Takes a namespace rather than argv, so a caller that already parsed to
+        run its own checks does not parse a second time. Two parses of one
+        invocation are two answers to the same question.
+
+        The caller owns the process. The code is:
+
+        - 0 when every journey passed
+        - 1 when any journey failed
+        - 2 when Yewo could not load the suite
+        """
+        try:
+            filepath = resolve_journey_file(args.journey_file)
+            workflows = select(load_workflows(filepath), args.workflow)
+        except UsageError as e:
+            logger.error("%s", e)
+            return 2
+        except Exception as e:
+            logger.error("Failed to load journey file: %s", e)
+            return 2
+
+        total = sum(len(workflow.journeys) for workflow in workflows)
+        logger.info("==================================================")
+        logger.info(
+            "Yewo CLI: Executing %d journey(s) across %d workflow(s)",
+            total,
+            len(workflows),
+        )
+        logger.info("==================================================")
+
+        all_passed = True
+        results = []
+
+        for workflow in workflows:
+            if workflow.name:
+                logger.info("Workflow: %s", workflow.name)
+            try:
+                runner = runner_for(workflow, args, filepath, self.config)
+            except Exception as setup_err:
+                logger.error(
+                    "Could not prepare workflow '%s': %s", workflow.name, setup_err
+                )
+                for journey in workflow.journeys:
+                    results.append((workflow.name, journey.id, journey.name, "ERROR"))
+                all_passed = False
+                continue
+
+            for journey in workflow.journeys:
+                logger.info("Starting run for journey: %s (%s)", journey.name, journey.id)
+                try:
+                    report = runner.run_journey(journey)
+                    passed = (report.status == "PASSED")
+                    results.append(
+                        (workflow.name, journey.id, journey.name, "PASSED" if passed else "FAILED")
+                    )
+                    if not passed:
+                        all_passed = False
+                except Exception as journey_err:
+                    logger.error("Error executing journey %s: %s", journey.id, journey_err)
+                    results.append((workflow.name, journey.id, journey.name, "ERROR"))
+                    all_passed = False
+
+        logger.info("==================================================")
+        logger.info("Execution Summary:")
+        for flow_name, j_id, j_name, status in results:
+            status_icon = "🟢" if status == "PASSED" else "🔴"
+            label = f"{flow_name}/{j_name}" if flow_name else j_name
+            logger.info("  %s %s (%s): %s", status_icon, label, j_id, status)
+        logger.info("==================================================")
+
+        if all_passed:
+            logger.info("All user journeys passed successfully.")
+            return 0
+        logger.error("One or more user journeys failed or encountered errors.")
+        return 1

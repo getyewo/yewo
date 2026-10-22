@@ -15,8 +15,8 @@ class SpendOrderTests(unittest.TestCase):
     """
 
     def _run(self):
-        from ronin.testing.models import UserJourney
-        from ronin.testing.runner import RoninTestRunner
+        from yewo.testing.models import UserJourney
+        from yewo.testing.runner import YewoTestRunner
 
         order = []
 
@@ -50,14 +50,14 @@ class SpendOrderTests(unittest.TestCase):
                 raise RuntimeError("stop here")
 
         with (
-            patch("ronin.testing.runner.DeviceSession", Session),
-            patch("ronin.testing.runner.ScenarioGenerator", Generator),
-            patch("ronin.testing.runner.QAAgent"),
-            patch("ronin.testing.runner.ensure_device_ready") as ready,
-            patch("ronin.testing.runner.for_grounding"),
+            patch("yewo.testing.runner.DeviceSession", Session),
+            patch("yewo.testing.runner.ScenarioGenerator", Generator),
+            patch("yewo.testing.runner.QAAgent"),
+            patch("yewo.testing.runner.ensure_device_ready") as ready,
+            patch("yewo.testing.runner.for_grounding"),
         ):
             ready.side_effect = lambda *_: order.append("asked adb")
-            RoninTestRunner(device_name="Pixel_8", app_path="app.apk").run_journey(
+            YewoTestRunner(device_name="Pixel_8", app_path="app.apk").run_journey(
                 UserJourney(id="j", name="J", description="A journey")
             )
         return order

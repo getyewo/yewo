@@ -2,16 +2,16 @@
 # not targets. Lower a value when a file improves. Delete the entry when
 # it reaches zero. Do not add new entries.
 [files]
-"src/ronin/agent/device/adb_control.py" = 2
-"src/ronin/agent/device/control.py" = 10
-"src/ronin/agent/device/session.py" = 2
-"src/ronin/agent/run/agent.py" = 1
-"src/ronin/agent/device/launch.py" = 1
-"src/ronin/agent/perception/detector.py" = 2
-"src/ronin/agent/perception/screen.py" = 4
-"src/ronin/llm/credentials.py" = 1
-"src/ronin/llm/llm_client.py" = 5
-"src/ronin/setup/steps.py" = 4
-"src/ronin/testing/qa_agent.py" = 1
-"src/ronin/testing/runner.py" = 4
-"src/ronin/utils/platform_checks.py" = 1
+"src/yewo/agent/device/adb_control.py" = 2
+"src/yewo/agent/device/control.py" = 10
+"src/yewo/agent/device/session.py" = 2
+"src/yewo/agent/run/agent.py" = 1
+"src/yewo/agent/device/launch.py" = 1
+"src/yewo/agent/perception/detector.py" = 2
+"src/yewo/agent/perception/screen.py" = 4
+"src/yewo/llm/credentials.py" = 1
+"src/yewo/llm/llm_client.py" = 5
+"src/yewo/setup/steps.py" = 4
+"src/yewo/testing/qa_agent.py" = 1
+"src/yewo/testing/runner.py" = 4
+"src/yewo/utils/platform_checks.py" = 1

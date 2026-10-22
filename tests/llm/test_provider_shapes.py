@@ -19,7 +19,7 @@ class ProviderShapeTests(unittest.TestCase):
     """
 
     def _parse(self, **body):
-        from ronin.testing.judge.qa_auditor import Assessment
+        from yewo.testing.judge.qa_auditor import Assessment
 
         return Assessment.model_validate(body)
 
@@ -74,12 +74,12 @@ class FindingShapeTests(unittest.TestCase):
     """`type` arrives meaning the name of the value, and meaning its rendering."""
 
     def _finding(self, **body):
-        from ronin.testing.models import SensitiveFinding
+        from yewo.testing.models import SensitiveFinding
 
         return SensitiveFinding.model_validate(body)
 
     def test_a_type_that_names_a_rendering_is_the_rendering(self):
-        from ronin.testing.models import Rendering
+        from yewo.testing.models import Rendering
 
         finding = self._finding(
             type="masked", location="Card preview", quoted="•••• 4444"
@@ -89,7 +89,7 @@ class FindingShapeTests(unittest.TestCase):
         self.assertEqual(finding.field, "Card preview")
 
     def test_a_type_that_names_no_rendering_is_the_field(self):
-        from ronin.testing.models import Rendering
+        from yewo.testing.models import Rendering
 
         finding = self._finding(type="CVV", state="label_only")
 
@@ -98,7 +98,7 @@ class FindingShapeTests(unittest.TestCase):
 
     def test_a_rendering_under_any_of_its_names_is_the_rendering(self):
         """`state` and `status` both arrive meaning how the value looked."""
-        from ronin.testing.models import Rendering
+        from yewo.testing.models import Rendering
 
         for alias in ("rendering", "state", "status"):
             finding = self._finding(field="CVV", **{alias: "absent"})
@@ -128,8 +128,8 @@ class ProviderRoutingTests(unittest.TestCase):
         from types import SimpleNamespace
         from unittest import mock
 
-        from ronin.llm.llm_client import LLMClient
-        from ronin.llm.messages import TextMessage
+        from yewo.llm.llm_client import LLMClient
+        from yewo.llm.messages import TextMessage
 
         answer = SimpleNamespace(
             choices=[SimpleNamespace(message=SimpleNamespace(content="ok"))]

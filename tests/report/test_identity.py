@@ -14,8 +14,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from ronin.agent.device.platform import Platform
-from ronin.identity import (
+from yewo.agent.device.platform import Platform
+from yewo.identity import (
     AppIdentity,
     app_identity,
     artifact_sha256,
@@ -147,9 +147,9 @@ class AppTests(unittest.TestCase):
             apk = Path(directory) / "app.apk"
             apk.write_bytes(b"not really an apk")
             with (
-                patch("ronin.identity._read", return_value=badging),
+                patch("yewo.identity._read", return_value=badging),
                 patch(
-                    "ronin.agent.device.adb_control.AdbControl.find_aapt",
+                    "yewo.agent.device.adb_control.AdbControl.find_aapt",
                     return_value="/sdk/aapt",
                 ),
             ):
@@ -160,13 +160,13 @@ class AppTests(unittest.TestCase):
         self.assertEqual(found.build, "417")
 
     def test_an_absent_sdk_is_not_a_run_failure(self):
-        from ronin.errors import DeviceUnavailable
+        from yewo.errors import DeviceUnavailable
 
         with tempfile.TemporaryDirectory() as directory:
             apk = Path(directory) / "app.apk"
             apk.write_bytes(b"not really an apk")
             with patch(
-                "ronin.agent.device.adb_control.AdbControl.find_aapt",
+                "yewo.agent.device.adb_control.AdbControl.find_aapt",
                 side_effect=DeviceUnavailable("ANDROID_HOME is not set"),
             ):
                 found = app_identity(str(apk))
@@ -242,7 +242,7 @@ class BuildContextTests(unittest.TestCase):
     def test_a_detached_checkout_reports_no_branch_rather_than_head(self):
         """Which is what git says, and `HEAD` is not a branch name."""
         with patch.dict("os.environ", {}, clear=True), patch(
-            "ronin.identity._read", side_effect=["HEAD", "abc123"]
+            "yewo.identity._read", side_effect=["HEAD", "abc123"]
         ):
             commit = git_identity(Path("/anywhere"))
 
@@ -260,7 +260,7 @@ class TargetTests(unittest.TestCase):
         )
 
         with patch(
-            "ronin.testing.judge.capabilities.target_of",
+            "yewo.testing.judge.capabilities.target_of",
             return_value=SimpleNamespace(emulator=True),
         ):
             found = device_identity(device)
@@ -277,7 +277,7 @@ class TargetTests(unittest.TestCase):
         )
 
         with patch(
-            "ronin.testing.judge.capabilities.target_of",
+            "yewo.testing.judge.capabilities.target_of",
             side_effect=RuntimeError("simctl did not answer"),
         ):
             found = device_identity(device)
@@ -325,12 +325,12 @@ class ReusedAppTests(unittest.TestCase):
         self.assertIsNotNone(found.artifact_sha256)
 
     def test_a_run_that_reuses_the_app_says_so_in_its_record(self):
-        from ronin.testing.runner import RoninTestRunner
+        from yewo.testing.runner import YewoTestRunner
 
-        reusing = RoninTestRunner(
+        reusing = YewoTestRunner(
             device_name="Pixel_8", app_path="app.apk", reuse_app=True
         )
-        installing = RoninTestRunner(device_name="Pixel_8", app_path="app.apk")
+        installing = YewoTestRunner(device_name="Pixel_8", app_path="app.apk")
 
         self.assertFalse(reusing._environment().app.installed)
         self.assertTrue(installing._environment().app.installed)
@@ -342,7 +342,7 @@ class GoalRunIdentityTests(unittest.TestCase):
     def _manifest(self, directory, reuse_app):
         from unittest.mock import Mock
 
-        from ronin.agent.run import standalone
+        from yewo.agent.run import standalone
 
         apk = Path(directory) / "app.apk"
         apk.write_bytes(b"a build")

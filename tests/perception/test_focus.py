@@ -10,10 +10,10 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from ronin.agent.device.control import DeviceControl
-from ronin.agent.device.focus import Focus
-from ronin.agent.device.platform import Platform
-from ronin.errors import ActionRejected, TargetNotInteractive
+from yewo.agent.device.control import DeviceControl
+from yewo.agent.device.focus import Focus
+from yewo.agent.device.platform import Platform
+from yewo.errors import ActionRejected, TargetNotInteractive
 
 SCREEN = (1080, 2400)
 POINT = (545, 1248)
@@ -183,7 +183,7 @@ class WaitForTests(unittest.TestCase):
         """A form that scrolled for the keyboard gives this answer and no other."""
         focus = self._focus([ELSEWHERE, AFTER_KEYBOARD])
 
-        with patch("ronin.agent.device.focus.time.sleep") as sleep:
+        with patch("yewo.agent.device.focus.time.sleep") as sleep:
             focus.wait_for(*POINT, before=ELSEWHERE)
 
         self.assertEqual(sleep.call_count, 1)
@@ -192,7 +192,7 @@ class WaitForTests(unittest.TestCase):
         """Nothing moved, so the full budget is what says the tap found no field."""
         focus = self._focus([ELSEWHERE])
 
-        with patch("ronin.agent.device.focus.time.sleep") as sleep:
+        with patch("yewo.agent.device.focus.time.sleep") as sleep:
             focus.wait_for(*POINT, before=ELSEWHERE)
 
         self.assertGreater(sleep.call_count, 1)

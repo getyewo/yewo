@@ -17,7 +17,7 @@ class CrossedOnWhichScreenTests(unittest.TestCase):
     """
 
     def _verification(self, rule_id, status, screen, applicable=True):
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.models import RuleVerification
 
         return RuleVerification(
             rule=rule_id,
@@ -29,7 +29,7 @@ class CrossedOnWhichScreenTests(unittest.TestCase):
         )
 
     def _verdict(self, verifications, outcomes=None, security=None):
-        from ronin.testing.qa_agent import QAAgent
+        from yewo.testing.qa_agent import QAAgent
 
         status, reason, _cause = QAAgent.__new__(QAAgent)._determine_status(
             run_result=SimpleNamespace(status="goal_reached", failure_reason=None),

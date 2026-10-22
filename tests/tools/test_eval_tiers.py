@@ -30,8 +30,8 @@ def _verdict_fixture(expect: corpus.Expectation, **arguments) -> corpus.VerdictF
 
 
 def _goal_reached():
-    from ronin.agent.memory.history import AgentHistory
-    from ronin.agent.run.outcomes import DeviceRunResult
+    from yewo.agent.memory.history import AgentHistory
+    from yewo.agent.run.outcomes import DeviceRunResult
 
     return DeviceRunResult(
         status="goal_reached", steps_executed=1, failure_reason=None,
@@ -85,8 +85,8 @@ class _FakeAuditor:
         self._looks = looks
 
     def audit(self, screenshot: bytes, screen_id):
-        from ronin.testing.judge.qa_auditor import Assessment
-        from ronin.testing.models import RuleVerification
+        from yewo.testing.judge.qa_auditor import Assessment
+        from yewo.testing.models import RuleVerification
 
         self._looks.append(screen_id)
         turn = len(self._looks) - 1
@@ -193,7 +193,7 @@ class ScreenTierTests(unittest.TestCase):
 
     def test_a_sweep_records_what_answered_each_call(self):
         """A state is an aggregate. It cannot say which call produced it."""
-        from ronin.llm.usage import CallRecord
+        from yewo.llm.usage import CallRecord
 
         record = CallRecord(
             model="asked/model", served_model="served/model", generation_id="g1",

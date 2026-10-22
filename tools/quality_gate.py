@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce Ronin's file-size ratchet, with no dependencies.
+"""Enforce Yewo's file-size ratchet, with no dependencies.
 
 Complexity is ruff's C901, configured in pyproject.toml. Counting it here as
 well gave one function two numbers from two algorithms that disagree. This one
@@ -82,14 +82,14 @@ def main(argv: list[str] | None = None) -> int:
         nargs="*",
         type=Path,
         default=[
-            REPOSITORY_ROOT / "src" / "ronin",
+            REPOSITORY_ROOT / "src" / "yewo",
             REPOSITORY_ROOT / "tests",
             # The eval harness, and not the rest of `tools`: `ste_lint.py` is
             # vendored and sits above the ceiling.
             REPOSITORY_ROOT / "tools" / "eval",
             REPOSITORY_ROOT / "tools" / "eval_gate.py",
         ],
-        help="Python files or directories to inspect (default: src/ronin and tests)",
+        help="Python files or directories to inspect (default: src/yewo and tests)",
     )
     args = parser.parse_args(argv)
 

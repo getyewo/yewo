@@ -77,7 +77,7 @@ class ExtractionTests(unittest.TestCase):
 
     def test_a_short_assigned_string_is_not_prose(self):
         """A name, a path and a log key are strings too."""
-        path = _written(self.tmp, 'LINTER_ENV = "RONIN_STE_LINT"\nSEP = ", "\n')
+        path = _written(self.tmp, 'LINTER_ENV = "YEWO_STE_LINT"\nSEP = ", "\n')
 
         self.assertEqual(ste_gate.prose_of(path).strip(), "")
 
@@ -108,12 +108,12 @@ class NamingTests(unittest.TestCase):
         self.assertEqual(ste_gate._named(outside), str(outside))
 
     def test_a_path_inside_the_repository_is_named_relative_to_it(self):
-        inside = ste_gate.REPOSITORY_ROOT / "src" / "ronin" / "errors.py"
+        inside = ste_gate.REPOSITORY_ROOT / "src" / "yewo" / "errors.py"
 
-        self.assertEqual(ste_gate._named(inside), "src/ronin/errors.py")
+        self.assertEqual(ste_gate._named(inside), "src/yewo/errors.py")
 
     def test_a_relative_path_is_left_alone(self):
-        self.assertEqual(ste_gate._named(Path("src/ronin/errors.py")), "src/ronin/errors.py")
+        self.assertEqual(ste_gate._named(Path("src/yewo/errors.py")), "src/yewo/errors.py")
 
 
 class BaselineTests(unittest.TestCase):
@@ -205,15 +205,15 @@ class WiderExtractionTests(unittest.TestCase):
 
         self.assertIn("Set the device network to offline", prose)
 
-    def test_a_file_ronin_writes_out_is_not_prose(self):
+    def test_a_file_yewo_writes_out_is_not_prose(self):
         """A template carries its own comments, and they are not text to hold."""
         prose = self._prose(
-            'TEMPLATE = """# Credentials Ronin reads\n'
+            'TEMPLATE = """# Credentials Yewo reads\n'
             'OPENROUTER_API_KEY=\n'
             '"""\n'
         )
 
-        self.assertNotIn("Credentials Ronin reads", prose)
+        self.assertNotIn("Credentials Yewo reads", prose)
 
     def test_a_name_is_still_not_a_sentence(self):
         self.assertEqual(self._prose('NAME = "a short label"\n').strip(), "")

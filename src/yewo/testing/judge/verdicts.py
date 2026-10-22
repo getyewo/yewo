@@ -1,0 +1,193 @@
+"""Turning a run and its evidence into one word about the scenario.
+
+Nothing here touches a device or a model. It reads what a run recorded and
+decides what that adds up to, so the ranking between a crash, an infeasible
+stop and missing evidence lives in one place.
+"""
+
+import logging
+from typing import TYPE_CHECKING, List, Optional, Sequence
+
+from yewo.agent.run.outcomes import DeviceRunResult
+from yewo.errors import Cause
+from yewo.testing.judge import rules
+from yewo.testing.models import ExpectedOutcome, QAIssue, RuleVerification, Status
+
+if TYPE_CHECKING:
+    from yewo.testing.judge.decide import Feasibility
+
+logger = logging.getLogger(__name__)
+
+
+def _terminal_outcome(
+    run_result: DeviceRunResult,
+    stop_reason: Optional[str],
+    verifications: List[RuleVerification],
+    issues: List[QAIssue],
+    outputs: Sequence["Feasibility"],
+    findings: Optional[List] = None,
+) -> Optional[tuple[Status, Optional[str], Optional[Cause]]]:
+    """Classify outcomes that cannot become a successful verification."""
+
+    # Ranked first: a crash is something the app did, and the rest are
+    # statements about the run. A scenario that crashed the app has found a
+    # defect, whatever else the planner concluded about being able to proceed.
+    if any(issue.issue_type == "crash_screen" for issue in issues):
+        return "FAILED", "App crashed: crash screen detected.", None
+    if run_result.status == "hook_stop" and stop_reason and "infeasible" in stop_reason.lower():
+        return "SKIPPED", stop_reason, Cause.SCENARIO
+    if run_result.status == "exception":
+        return (
+            "ERROR",
+            run_result.failure_reason or "Execution exception",
+            run_result.cause or Cause.UNKNOWN,
+        )
+    if run_result.status in ("loop_detected", "step_limit"):
+        return "UNVERIFIED", run_result.failure_reason, Cause.AGENT
+    critical = next(
+        (
+            issue
+            for issue in issues
+            if issue.severity == "critical"
+            and not _unsupported_exposure(issue, findings)
+        ),
+        None,
+    )
+    if critical:
+        return "FAILED", f"Critical QA issue: {critical.description}", None
+    violated = _violated_security_rule(verifications)
+    if violated:
+        return "FAILED", f"Security rule violated: {violated.rule}", None
+    # Security rules never reach this. _violated_security_rule above fails on
+    # one anywhere, so what is left here is an expected outcome, which is a
+    # claim about the screen it names and not about any other.
+    settled = _settled(verifications)
+    failed = next(
+        (
+            verification
+            for (rule_id, _), verification in _per_screen(verifications).items()
+            if verification.status == "failed" and rule_id not in settled
+        ),
+        None,
+    )
+    if failed:
+        return "FAILED", f"Rule validation failed: {failed.rule}", None
+    if outputs and not outputs[-1].is_scenario_feasible:
+        return (
+            "SKIPPED",
+            outputs[-1].infeasibility_reason or "Scenario infeasible",
+            Cause.SCENARIO,
+        )
+    return None
+
+
+EXPOSURE = "sensitive_data_exposure"
+
+
+def _unsupported_exposure(issue, findings) -> bool:
+    """Whether an exposure claim has no reading of the screen behind it.
+
+    The auditor answers twice about a screen: in prose, where it may call a
+    bare "CVV:" caption a plain-text CVV, and as a reading of each sensitive
+    field, where it must choose between a legible value, a mask, a caption and
+    nothing. The reading is the evidence. A claim the reading does not support
+    is reported and does not fail the scenario.
+
+    With no reading at all there is nothing to weigh, so the claim stands.
+    """
+    if issue.issue_type != EXPOSURE:
+        return False
+    here = [finding for finding in (findings or []) if finding.screen_name == issue.current_screen]
+    return bool(here) and not any(finding.is_exposure() for finding in here)
+
+
+def _per_screen(verifications: List[RuleVerification]) -> dict:
+    """The last answer for each rule, on each screen that could answer it.
+
+    Every rule is put to every screen, so a scenario accumulates many answers
+    per rule. Screens the rule cannot apply to answer "untested", and those say
+    nothing about it. Reading them as the verdict would let walking away from a
+    field decide whether the field worked.
+
+    Kept per screen rather than per rule, because `applicable` is the auditor's
+    own claim and nothing can check it. One wrong claim then reaches only the
+    screen it was made about.
+    """
+    latest = {}
+    for verification in verifications:
+        if verification.rule_id and verification.applicable:
+            latest[(verification.rule_id, verification.screen_name or "")] = verification
+    return latest
+
+
+def _settled(verifications: List[RuleVerification]) -> set:
+    """The rules some screen ended on a pass.
+
+    A screen that saw an outcome hold is evidence of it, and a later answer
+    about a different screen does not take that away. A later answer about the
+    same screen does: there, the outcome stopped holding where it could be
+    seen.
+    """
+    return {
+        rule_id
+        for (rule_id, _), verification in _per_screen(verifications).items()
+        if verification.status == "passed"
+    }
+
+
+def _violated_security_rule(verifications: List[RuleVerification]):
+    """A security rule failing anywhere is a violation, however the run ended.
+
+    Unlike an expected outcome, these describe what must never happen: a
+    password exposed at step 4 stays exposed, whatever step 9 shows.
+    """
+    return next(
+        (
+            verification
+            for verification in verifications
+            if verification.status == "failed"
+            and rules.is_kind(verification.rule_id, rules.SECURITY)
+        ),
+        None,
+    )
+
+
+def _missing_required_ids(
+    verifications: List[RuleVerification],
+    required_outcomes: Sequence[ExpectedOutcome | str],
+    security_rules: Sequence[str],
+) -> list[str]:
+    """Lists the required assertions a scenario ended without evidencing.
+
+    The two kinds are judged differently because they mean different things.
+
+    An expected outcome is evidenced once a screen ended on a pass for it. Many
+    outcomes can only be seen in passing — a field accepts a long address, and
+    the next screen has no such field. A later "failed" about the same screen
+    takes the evidence away, because the outcome stopped holding where it could
+    be seen. A later "failed" about a different screen does not: the outcome
+    was never a claim about that screen.
+
+    A security rule describes what must never happen. The auditor answers every
+    rule on every screen, so a mention alone proves nothing. A rule counts as
+    required only once some screen could have broken it. One pass anywhere
+    evidences it. It stays evidenced whatever later screens show, because a
+    failure anywhere already failed the scenario.
+    """
+    expected_ids = rules.ids(required_outcomes, rules.EXPECTED)
+    security_ids = rules.ids(security_rules, rules.SECURITY)
+    applicable = {
+        verification.rule_id
+        for verification in verifications
+        if verification.rule_id and verification.applicable
+    }
+    evidenced = {
+        verification.rule_id
+        for verification in verifications
+        if verification.rule_id
+        and verification.applicable
+        and verification.status == "passed"
+    }
+    settled = _settled(verifications) & expected_ids
+    required_ids = expected_ids | (security_ids & applicable)
+    return sorted(required_ids - settled - (evidenced & security_ids))

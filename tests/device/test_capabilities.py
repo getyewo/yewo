@@ -24,7 +24,7 @@ from fakes import (
     silent_reads,
 )
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     AppStateCapability,
     BatteryCapability,
     CapabilityKind,
@@ -36,9 +36,9 @@ from ronin.agent.actuation.actions import (
     PermissionCapability,
     TimezoneCapability,
 )
-from ronin.agent.device import capability_controller
-from ronin.agent.device.platform import Platform
-from ronin.errors import ActionRejected
+from yewo.agent.device import capability_controller
+from yewo.agent.device.platform import Platform
+from yewo.errors import ActionRejected
 
 class DriverFirstTests(unittest.TestCase):
     """The session already holds a driver, so it is asked before adb."""
@@ -263,7 +263,7 @@ class SessionIdentityTests(unittest.TestCase):
     """What the session reads off the driver to name the app."""
 
     def _resolved(self, capabilities, package_id=None):
-        from ronin.agent.device.control import DeviceControl
+        from yewo.agent.device.control import DeviceControl
 
         control = object.__new__(DeviceControl)
         control.driver = SimpleNamespace(capabilities=capabilities)
@@ -383,7 +383,7 @@ class VocabularyTests(unittest.TestCase):
     """What the planner is offered comes from the models themselves."""
 
     def test_the_prompt_lists_every_capability(self):
-        from ronin.agent.actuation.actions import capability_vocabulary
+        from yewo.agent.actuation.actions import capability_vocabulary
 
         listing = capability_vocabulary()
 
@@ -392,7 +392,7 @@ class VocabularyTests(unittest.TestCase):
 
     def test_a_capability_s_choices_reach_the_prompt(self):
         """A mode the model cannot see is a mode it will not ask for."""
-        from ronin.agent.actuation.actions import capability_vocabulary
+        from yewo.agent.actuation.actions import capability_vocabulary
 
         listing = capability_vocabulary()
 
@@ -400,7 +400,7 @@ class VocabularyTests(unittest.TestCase):
             self.assertIn(mode, listing)
 
     def test_an_action_carries_a_typed_capability_not_a_dict(self):
-        from ronin.agent.actuation.actions import CapabilityAction
+        from yewo.agent.actuation.actions import CapabilityAction
 
         action = CapabilityAction.model_validate(
             {
@@ -416,7 +416,7 @@ class VocabularyTests(unittest.TestCase):
     def test_a_mode_no_capability_offers_is_refused(self):
         from pydantic import ValidationError
 
-        from ronin.agent.actuation.actions import CapabilityAction
+        from yewo.agent.actuation.actions import CapabilityAction
 
         with self.assertRaises(ValidationError):
             CapabilityAction.model_validate(
@@ -443,10 +443,10 @@ class DeviceTruthTests(unittest.TestCase):
         Writing the setting leaves the property alone, so reading the setting
         back confirms the write and says nothing about the device.
         """
-        from ronin.agent.device import receipts as module
+        from yewo.agent.device import receipts as module
 
         with mock.patch(
-            "ronin.agent.device.adb_control.AdbControl.ask",
+            "yewo.agent.device.adb_control.AdbControl.ask",
             return_value="Europe/London",
         ) as ask:
             self.assertEqual(module.timezone(SERIAL), "Europe/London")
@@ -455,11 +455,11 @@ class DeviceTruthTests(unittest.TestCase):
 
     def test_a_permission_the_app_never_asked_for_is_not_merely_unreadable(self):
         """`pm grant` exits 0 for one of these and grants nothing."""
-        from ronin.agent.device import receipts as module
+        from yewo.agent.device import receipts as module
 
         dump = "    requested permissions:\n      android.permission.INTERNET\n"
         with mock.patch(
-            "ronin.agent.device.adb_control.AdbControl.ask", return_value=dump
+            "yewo.agent.device.adb_control.AdbControl.ask", return_value=dump
         ):
             answer = module.permission_granted(
                 SERIAL, PACKAGE, "android.permission.CAMERA"
@@ -482,7 +482,7 @@ class BothWaysFailedTests(unittest.TestCase):
         self.addCleanup(self._reads.stop)
 
     def test_the_driver_s_reason_leads_and_both_are_kept(self):
-        from ronin.errors import DeviceUnavailable
+        from yewo.errors import DeviceUnavailable
 
         driver = FakeDriver(without=["gsmCall"])
         control = controller(driver=driver)

@@ -23,7 +23,7 @@ import logging
 from dataclasses import dataclass
 from typing import Callable, Optional
 
-from ronin.testing.judge import decide, rules
+from yewo.testing.judge import decide, rules
 
 from tools.eval.corpus import ScreenFixture, VerdictFixture
 

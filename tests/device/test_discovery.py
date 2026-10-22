@@ -1,7 +1,7 @@
 """Enumerating the targets a run could name.
 
 A plugged-in iPhone was reachable and invisible: a session against one worked
-when its udid was typed by hand, and `ronin devices` listed simulators only.
+when its udid was typed by hand, and `yewo devices` listed simulators only.
 Nothing a person cannot see is a target they can choose.
 """
 
@@ -9,8 +9,8 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from ronin.agent.device.platform import Platform
-from ronin.devices import discovery
+from yewo.agent.device.platform import Platform
+from yewo.devices import discovery
 
 # `xcrun xctrace list devices`, in the shape it answers. The host Mac sits in
 # the same section as the phone and carries no release, which is what tells a
@@ -98,7 +98,7 @@ class IosListingTests(unittest.TestCase):
         self.assertEqual([d.kind for d in found], ["physical", "simulator"])
 
     def test_the_ios_listing_reaches_the_command(self):
-        """`list_devices` is what `ronin devices` prints, so it has to carry both."""
+        """`list_devices` is what `yewo devices` prints, so it has to carry both."""
         phone = discovery.Device("QA iPhone", "ios", "physical", discovery.RUNNING)
 
         with mock.patch.object(
@@ -113,7 +113,7 @@ class IosListingTests(unittest.TestCase):
 class IdentifierResolutionTests(unittest.TestCase):
     """From the name a person typed to the id a session addresses.
 
-    `ronin devices` listed the phone and nothing carried its udid into a
+    `yewo devices` listed the phone and nothing carried its udid into a
     session. XCUITest selects a real device by udid, and a name picks a
     target only while one target carries that name.
     """
@@ -158,7 +158,7 @@ class SessionTargetingTests(unittest.TestCase):
     """What the session is told to connect to."""
 
     def _capabilities(self, resolved):
-        from ronin.agent.device import control
+        from yewo.agent.device import control
 
         with mock.patch.object(control, "_listed_udid", return_value=resolved), \
              mock.patch.object(control.DeviceControl, "_start_session") as started, \
@@ -201,7 +201,7 @@ class AmbiguousNameTests(unittest.TestCase):
         )
 
     def test_a_name_two_targets_share_is_refused(self):
-        from ronin.errors import UsageError
+        from yewo.errors import UsageError
 
         with self.assertRaises(UsageError) as raised:
             self._resolve("iPhone 17", *self._twins())
@@ -210,7 +210,7 @@ class AmbiguousNameTests(unittest.TestCase):
 
     def test_the_refusal_names_both_candidates(self):
         """A person cannot choose between things they were not shown."""
-        from ronin.errors import UsageError
+        from yewo.errors import UsageError
 
         with self.assertRaises(UsageError) as raised:
             self._resolve("iPhone 17", *self._twins())
@@ -235,7 +235,7 @@ class AmbiguousNameTests(unittest.TestCase):
 
 
 class DefaultTargetTests(unittest.TestCase):
-    """What `ronin devices default` saves, and what the listing marks.
+    """What `yewo devices default` saves, and what the listing marks.
 
     A saved name is read on every later run. A name two iOS targets share
     would pick one of them silently, and a physical iPhone has no name but
@@ -251,11 +251,11 @@ class DefaultTargetTests(unittest.TestCase):
     AVD = discovery.Device("Pixel_8", "android", "avd", discovery.RUNNING, "emulator-5554")
 
     def _saved(self, name, *devices):
-        from ronin.cli import devices as command
+        from yewo.cli import devices as command
 
         console = mock.Mock()
         with mock.patch.object(command, "list_devices", return_value=list(devices)), \
-             mock.patch.object(command, "set_value", return_value="ronin.yaml") as saved:
+             mock.patch.object(command, "set_value", return_value="yewo.yaml") as saved:
             code = command.set_default(name, mock.Mock(), console)
         return code, (saved.call_args[0][1] if saved.call_args else None), console
 
@@ -293,7 +293,7 @@ class DefaultTargetTests(unittest.TestCase):
         self.assertIsNone(saved)
 
     def _listing(self, target):
-        from ronin.cli import devices as command
+        from yewo.cli import devices as command
 
         config = mock.Mock()
         config.get.return_value = target
@@ -377,12 +377,12 @@ class ResolutionAgreementTests(unittest.TestCase):
         self.assertIs(found, self.PHONE)
 
     def test_the_saved_default_agrees_with_that(self):
-        from ronin.cli import devices as command
+        from yewo.cli import devices as command
 
         console = mock.Mock()
         with mock.patch.object(
             command, "list_devices", return_value=[self.DECOY, self.PHONE]
-        ), mock.patch.object(command, "set_value", return_value="ronin.yaml") as saved:
+        ), mock.patch.object(command, "set_value", return_value="yewo.yaml") as saved:
             code = command.set_default("UDID-A", mock.Mock(), console)
 
         self.assertEqual(code, 0)
@@ -390,34 +390,34 @@ class ResolutionAgreementTests(unittest.TestCase):
 
     def test_a_running_avd_is_saved_by_name_not_by_its_serial(self):
         """`emulator-5554` is gone by the next run, and the name is not."""
-        from ronin.cli import devices as command
+        from yewo.cli import devices as command
 
         avd = discovery.Device(
             "Pixel_8", "android", "avd", discovery.RUNNING, "emulator-5554"
         )
         console = mock.Mock()
         with mock.patch.object(command, "list_devices", return_value=[avd]), \
-             mock.patch.object(command, "set_value", return_value="ronin.yaml") as saved:
+             mock.patch.object(command, "set_value", return_value="yewo.yaml") as saved:
             command.set_default("emulator-5554", mock.Mock(), console)
 
         self.assertEqual(saved.call_args[0][1], "Pixel_8")
 
     def test_an_android_handset_is_saved_by_serial_not_by_model(self):
-        from ronin.cli import devices as command
+        from yewo.cli import devices as command
 
         handset = discovery.Device(
             "Pixel 9 Pro", "android", "physical", discovery.RUNNING, "38291FDH"
         )
         console = mock.Mock()
         with mock.patch.object(command, "list_devices", return_value=[handset]), \
-             mock.patch.object(command, "set_value", return_value="ronin.yaml") as saved:
+             mock.patch.object(command, "set_value", return_value="yewo.yaml") as saved:
             command.set_default("Pixel 9 Pro", mock.Mock(), console)
 
         self.assertEqual(saved.call_args[0][1], "38291FDH")
 
     def test_an_ambiguous_target_marks_no_row(self):
         """The run would refuse it, and marking either row would claim a choice."""
-        from ronin.cli import devices as command
+        from yewo.cli import devices as command
 
         twins = [
             discovery.Device("iPhone 17", "ios", "physical", discovery.RUNNING, "A"),

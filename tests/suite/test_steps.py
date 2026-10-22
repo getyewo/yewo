@@ -11,13 +11,13 @@ import unittest
 
 from pydantic import ValidationError
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     CapabilityKind,
     NetworkCapability,
     PermissionCapability,
 )
-from ronin.testing import steps
-from ronin.testing.steps import ActionStep, CapabilityStep, EnterStep
+from yewo.testing import steps
+from yewo.testing.steps import ActionStep, CapabilityStep, EnterStep
 
 
 class EnterStepTests(unittest.TestCase):
@@ -30,7 +30,7 @@ class EnterStepTests(unittest.TestCase):
         )
 
     def test_the_rendered_name_is_what_substitution_resolves(self):
-        from ronin.testing.journey_env import substitute
+        from yewo.testing.journey_env import substitute
 
         step = EnterStep(field="Password", value="rejected_password")
 
@@ -40,7 +40,7 @@ class EnterStepTests(unittest.TestCase):
         )
 
     def test_a_dotted_account_value_resolves_too(self):
-        from ronin.testing.journey_env import substitute
+        from yewo.testing.journey_env import substitute
 
         step = EnterStep(field="Email", value="actors.editor.email")
 
@@ -114,7 +114,7 @@ class ActionStepTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "one action"):
             ActionStep(instruction="Tap Login and verify the error appears.")
 
-    def test_a_verb_for_something_ronin_cannot_do_is_refused(self):
+    def test_a_verb_for_something_yewo_cannot_do_is_refused(self):
         """No capability rotates the screen, so no step may ask for it."""
         with self.assertRaisesRegex(ValidationError, "not an action"):
             ActionStep(instruction="Rotate the device to landscape.")

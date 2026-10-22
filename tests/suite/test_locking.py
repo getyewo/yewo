@@ -14,14 +14,14 @@ from unittest.mock import Mock
 
 from fakes import walk
 
-from ronin.errors import UsageError
-from ronin.testing import lock as locking_file
-from ronin.testing.generator import ScenarioGenerator
-from ronin.testing.lock import contract_sha256
-from ronin.testing.locking import staleness, suite_for
-from ronin.testing.models import ScenarioDraft, UserJourney
-from ronin.testing.steps import EnterStep
-from ronin.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
+from yewo.errors import UsageError
+from yewo.testing import lock as locking_file
+from yewo.testing.generator import ScenarioGenerator
+from yewo.testing.lock import contract_sha256
+from yewo.testing.locking import staleness, suite_for
+from yewo.testing.models import ScenarioDraft, UserJourney
+from yewo.testing.steps import EnterStep
+from yewo.testing.taxonomy import Category, CoverageCell, Priority, ScenarioType
 
 HAPPY = CoverageCell(Category.FUNCTIONAL, ScenarioType.HAPPY_PATH, Priority.P0)
 NEGATIVE = CoverageCell(Category.SECURITY, ScenarioType.NEGATIVE, Priority.P0)
@@ -65,7 +65,7 @@ class ResolutionTests(unittest.TestCase):
 
     def test_a_first_run_generates_and_writes_the_lock(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             resolution, client = self._suite(path, [draft()])
 
             self.assertEqual(resolution.generated, 1)
@@ -76,7 +76,7 @@ class ResolutionTests(unittest.TestCase):
 
     def test_a_second_run_reads_it_and_asks_for_nothing(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             first, _ = self._suite(path, [draft()])
             second, client = self._suite(path)
 
@@ -91,7 +91,7 @@ class ResolutionTests(unittest.TestCase):
 
     def test_a_changed_journey_regenerates_only_that_cell(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             made, _ = generator(draft("A"), draft("B"))
             two = journey(HAPPY, NEGATIVE)
             suite_for(two, lambda j, cells: made.generate_suite(j, cells), path=path)
@@ -113,7 +113,7 @@ class ResolutionTests(unittest.TestCase):
         """The lock holds names. What runs holds values. One filling, two paths."""
         steps = [EnterStep(field="Email", value="email")]
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             made, _ = generator(draft(steps=steps))
             live = UserJourney(
                 id="j", name="J", description="A user signs in.",
@@ -131,7 +131,7 @@ class ResolutionTests(unittest.TestCase):
 
     def test_entries_for_another_journey_survive_a_write(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             other = UserJourney(
                 id="other", name="O", description="Something else.", coverage=[HAPPY]
             )
@@ -148,7 +148,7 @@ class ResolutionTests(unittest.TestCase):
     def test_a_cell_the_file_stopped_declaring_is_dropped(self):
         """A lock is whole or it is a bug, and an entry nothing asks for is neither."""
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             made, _ = generator(draft("A"), draft("B"))
             suite_for(
                 journey(HAPPY, NEGATIVE),
@@ -183,13 +183,13 @@ class LockedRunTests(unittest.TestCase):
 
     def test_an_absent_lock_fails_and_names_the_command(self):
         with tempfile.TemporaryDirectory() as directory:
-            message = self._refused(path=Path(directory) / "ronin.lock")
+            message = self._refused(path=Path(directory) / "yewo.lock")
 
-        self.assertIn("ronin lock", message)
+        self.assertIn("yewo lock", message)
 
     def test_a_stale_lock_names_the_cell_and_why(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             made, _ = generator(draft())
             suite_for(journey(), lambda j, c: made.generate_suite(j, c), path=path)
 
@@ -211,7 +211,7 @@ class LockedRunTests(unittest.TestCase):
 
     def test_a_fresh_lock_runs_without_asking_for_anything(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             made, _ = generator(draft())
             suite_for(journey(), lambda j, c: made.generate_suite(j, c), path=path)
 
@@ -229,7 +229,7 @@ class LockedRunTests(unittest.TestCase):
 
     def test_staleness_names_the_two_problems_apart(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             made, _ = generator(draft())
             suite_for(journey(), lambda j, c: made.generate_suite(j, c), path=path)
             held = locking_file.read(path)
@@ -271,7 +271,7 @@ class StableFileTests(unittest.TestCase):
 
     def test_a_second_run_of_two_journeys_rewrites_nothing(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             self._two_journeys(path, ["a", "b"])
             before = path.read_text()
 
@@ -293,12 +293,12 @@ class RefusalCostTests(unittest.TestCase):
     def _locked_run(self, directory):
         from unittest.mock import patch
 
-        from ronin.testing.models import UserJourney
-        from ronin.testing.runner import RoninTestRunner
+        from yewo.testing.models import UserJourney
+        from yewo.testing.runner import YewoTestRunner
 
-        path = Path(directory) / "ronin.yaml"
+        path = Path(directory) / "yewo.yaml"
         path.write_text("device: Pixel_8\n")
-        runner = RoninTestRunner(
+        runner = YewoTestRunner(
             device_name="Pixel_8",
             app_path="app.apk",
             assets_dir=Path(directory) / "assets",
@@ -306,8 +306,8 @@ class RefusalCostTests(unittest.TestCase):
             locked=True,
         )
         with (
-            patch("ronin.testing.runner.ensure_device_ready") as ready,
-            patch("ronin.testing.runner.DeviceSession") as session,
+            patch("yewo.testing.runner.ensure_device_ready") as ready,
+            patch("yewo.testing.runner.DeviceSession") as session,
             self.assertRaises(UsageError) as raised,
         ):
             runner.run_journey(
@@ -319,7 +319,7 @@ class RefusalCostTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             message, ready, session, _ = self._locked_run(directory)
 
-        self.assertIn("ronin lock", message)
+        self.assertIn("yewo lock", message)
         self.assertEqual(ready.call_count, 0)
         self.assertEqual(session.call_count, 0)
 
@@ -355,7 +355,7 @@ class StaleAndUnregenerableTests(unittest.TestCase):
 
         mismatch = ValidationError.from_exception_data("ScenarioDraft", [])
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             resolution, _ = self._changed(path, mismatch)
 
         self.assertEqual(resolution.scenarios, [])
@@ -365,11 +365,11 @@ class StaleAndUnregenerableTests(unittest.TestCase):
     def test_the_cell_is_reported_as_uncovered_with_its_cause(self):
         from pydantic import ValidationError
 
-        from ronin.errors import Cause
+        from yewo.errors import Cause
 
         mismatch = ValidationError.from_exception_data("ScenarioDraft", [])
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             resolution, _ = self._changed(path, mismatch)
 
         self.assertEqual(len(resolution.uncovered), 1)
@@ -386,7 +386,7 @@ class StaleAndUnregenerableTests(unittest.TestCase):
 
         mismatch = ValidationError.from_exception_data("ScenarioDraft", [])
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             before = path.read_text() if path.exists() else None
             resolution, _ = self._changed(path, mismatch)
             after = path.read_text()
@@ -402,7 +402,7 @@ class StaleAndUnregenerableTests(unittest.TestCase):
 
         mismatch = ValidationError.from_exception_data("ScenarioDraft", [])
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             self._changed(path, mismatch)
             again, _ = self._changed(path, mismatch)
 
@@ -410,10 +410,10 @@ class StaleAndUnregenerableTests(unittest.TestCase):
         self.assertEqual(again.reused, 0)
 
     def test_a_provider_that_would_not_answer_is_the_same_refusal(self):
-        from ronin.errors import ProviderUnavailable
+        from yewo.errors import ProviderUnavailable
 
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             resolution, _ = self._changed(path, ProviderUnavailable("spent"))
 
         self.assertEqual(resolution.scenarios, [])
@@ -425,7 +425,7 @@ class StaleAndUnregenerableTests(unittest.TestCase):
 
         mismatch = ValidationError.from_exception_data("ScenarioDraft", [])
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             made, _ = generator(draft("A"), draft("B"))
             two = journey(HAPPY, NEGATIVE)
             suite_for(two, made.generate_suite, path=path)
@@ -471,7 +471,7 @@ class PartialRegenerationTests(unittest.TestCase):
 
     def test_the_cell_that_could_not_be_written_keeps_its_entry(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             self._half_failed(path)
             held = locking_file.read(path)
 
@@ -483,7 +483,7 @@ class PartialRegenerationTests(unittest.TestCase):
     def test_it_keeps_the_contract_it_was_written_under(self):
         """Which is what makes the next run read it as stale again."""
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             _, altered = self._half_failed(path)
             held = locking_file.read(path)
             stale = next(e for e in held.entries if e.cell == "security.negative.0")
@@ -497,7 +497,7 @@ class PartialRegenerationTests(unittest.TestCase):
 
     def test_the_cell_that_was_written_is_fresh(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             _, altered = self._half_failed(path)
             held = locking_file.read(path)
 
@@ -505,7 +505,7 @@ class PartialRegenerationTests(unittest.TestCase):
 
     def test_only_the_cell_that_was_written_runs(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             resolution, _ = self._half_failed(path)
 
         self.assertEqual(
@@ -518,7 +518,7 @@ class PartialRegenerationTests(unittest.TestCase):
         from pydantic import ValidationError
 
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "ronin.lock"
+            path = Path(directory) / "yewo.lock"
             _, altered = self._half_failed(path)
 
             mismatch = ValidationError.from_exception_data("ScenarioDraft", [])

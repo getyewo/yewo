@@ -10,15 +10,15 @@ the rest of the install is offered.
 import unittest
 from unittest import mock
 
-from ronin.doctor import Status
-from ronin.doctor.checks import check_applesimutils
+from yewo.doctor import Status
+from yewo.doctor.checks import check_applesimutils
 
 
 class DoctorTests(unittest.TestCase):
-    """What `ronin doctor` says about the host."""
+    """What `yewo doctor` says about the host."""
 
     def _checked(self, present, macos=True, version="applesimutils version 0.9.12"):
-        from ronin.doctor import checks
+        from yewo.doctor import checks
 
         with mock.patch.object(checks, "is_macos", return_value=macos), \
              mock.patch.object(
@@ -55,12 +55,12 @@ class DoctorTests(unittest.TestCase):
 
 
 class SetupTests(unittest.TestCase):
-    """What `ronin setup` offers to do about it."""
+    """What `yewo setup` offers to do about it."""
 
     def _step(
         self, present, macos=True, brew=True, approved=True, dry_run=False, exit_code=0
     ):
-        from ronin.setup import steps
+        from yewo.setup import steps
 
         def which(name):
             if name == "applesimutils":

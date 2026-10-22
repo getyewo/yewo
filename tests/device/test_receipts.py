@@ -10,7 +10,7 @@ import unittest
 from types import SimpleNamespace
 from unittest import mock
 
-from ronin.agent.actuation.actions import (
+from yewo.agent.actuation.actions import (
     AccessibilityCapability,
     AppStateCapability,
     BatteryCapability,
@@ -22,9 +22,9 @@ from ronin.agent.actuation.actions import (
     NetworkCapability,
     PermissionCapability,
 )
-from ronin.agent.device import capability_controller
-from ronin.agent.device.platform import Platform
-from ronin.errors import ActionRejected
+from yewo.agent.device import capability_controller
+from yewo.agent.device.platform import Platform
+from yewo.errors import ActionRejected
 from fakes import FakeDriver, controller, silent_reads
 
 
@@ -221,7 +221,7 @@ class SessionTruthTests(unittest.TestCase):
     def test_params_go_through_as_one_object(self):
         """Appium reads them as `args[0]`, so a list arrives where an object
         belongs and the driver refuses the call."""
-        from ronin.agent.device.driver_commands import DriverCommands
+        from yewo.agent.device.driver_commands import DriverCommands
 
         sent = []
         driver = SimpleNamespace(
@@ -236,7 +236,7 @@ class SessionTruthTests(unittest.TestCase):
     def test_a_location_read_drops_the_cache_first(self):
         """`getGeolocation` reads a cache `setGeolocation` does not clear, so
         without this it reports the place before the change."""
-        from ronin.agent.device.driver_commands import DriverCommands
+        from yewo.agent.device.driver_commands import DriverCommands
 
         asked = []
         driver = SimpleNamespace(
@@ -253,7 +253,7 @@ class SessionTruthTests(unittest.TestCase):
     def test_a_coordinate_is_compared_at_four_places(self):
         """The device answers with the float it stored, which is not the float
         it was given: 35.6812 comes back as 35.6811983."""
-        from ronin.agent.device.driver_commands import DriverCommands
+        from yewo.agent.device.driver_commands import DriverCommands
 
         driver = SimpleNamespace(
             execute_script=lambda script, params=None: {
@@ -272,7 +272,7 @@ class SessionTruthTests(unittest.TestCase):
 
     def test_the_clipboard_is_carried_base64_both_ways(self):
         """Plain text reaches the driver as 'bad base-64'."""
-        from ronin.agent.device.driver_commands import DriverCommands
+        from yewo.agent.device.driver_commands import DriverCommands
 
         sent = []
         driver = SimpleNamespace(
